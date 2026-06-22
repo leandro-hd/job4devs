@@ -49,7 +49,9 @@ CREATE TABLE users (
 -- ============================================================
 -- USER_SETTINGS
 -- Key/value store scoped per user.
--- Keys used in MVP: keywords, min_budget, notification_email, cron_interval_minutes
+-- Keys used in MVP: keywords, min_budget, notification_email
+-- cron_interval_minutes is NOT a per-user setting — there is a single global
+-- node-cron schedule, read from DEFAULT_CRON_INTERVAL_MINUTES (.env).
 -- ============================================================
 CREATE TABLE user_settings (
     id          SERIAL PRIMARY KEY,

@@ -97,12 +97,12 @@ backend/
 │   ├── config/
 │   │   └── index.ts                     # Single source for all process.env reads
 │   │
-│   └── app.ts                           # Mounts Express + starts Worker
+│   └── app.ts                           # Mounts Express only — kept testable in isolation
 │
 ├── .env.example
 ├── tsconfig.json
 ├── package.json
-└── server.ts                            # Entry point — only calls app.ts
+└── server.ts                            # Entry point — mounts app.ts and starts the Worker scheduler
 ```
 
 ### Layer responsibilities (strict — do not cross these boundaries)

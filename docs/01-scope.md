@@ -28,7 +28,7 @@
 - [ ] Auth screens: register, login
 - [ ] Feed page: paginated list of collected jobs (title, source, budget, published date, link)
 - [ ] Dashboard: last cycle status, total jobs collected, total notifications sent
-- [ ] Settings page: manage keywords, minimum budget, notification email, cron interval
+- [ ] Settings page: manage keywords, minimum budget, notification email
 
 ### Database
 - Full schema as specified in `docs/03-database.md`

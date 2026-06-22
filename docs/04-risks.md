@@ -65,11 +65,11 @@ This is visible in the dashboard immediately.
 // scheduler.ts
 import cron from 'node-cron';
 import { runScrapeJob } from './jobs/scrape.job';
-import * as settingsRepository from '../db/repositories/settings.repository';
+import { config } from '../config';
 
-export async function startScheduler(): Promise<void> {
-  // Read interval from DB — default 5 min if not set
-  const interval = await settingsRepository.getGlobal('cron_interval_minutes') ?? 5;
+export function startScheduler(): void {
+  // Global interval — DEFAULT_CRON_INTERVAL_MINUTES in .env, not a per-user setting
+  const interval = config.defaultCronIntervalMinutes;
   const expression = `*/${interval} * * * *`;
 
   cron.schedule(expression, async () => {
