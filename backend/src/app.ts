@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import authRoutes from './api/routes/auth.routes';
+import settingsRoutes from './api/routes/settings.routes';
 import { errorHandler } from './api/middlewares/errorHandler';
 
 export function createApp(): Express {
@@ -14,6 +15,7 @@ export function createApp(): Express {
   });
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/settings', settingsRoutes);
 
   app.use(errorHandler);
 

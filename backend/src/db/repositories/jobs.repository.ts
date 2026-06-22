@@ -16,6 +16,59 @@ export interface NewJob {
   publishedAt: Date | null;
 }
 
+export interface Job {
+  id: number;
+  sourceId: number;
+  externalId: string;
+  title: string;
+  url: string;
+  description: string | null;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  budgetType: string;
+  clientRating: number | null;
+  clientReviews: number | null;
+  location: string | null;
+  rawTags: string[];
+  publishedAt: Date | null;
+}
+
+interface JobRow {
+  id: number;
+  source_id: number;
+  external_id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  budget_min: string | null;
+  budget_max: string | null;
+  budget_type: string;
+  client_rating: string | null;
+  client_reviews: number | null;
+  location: string | null;
+  raw_tags: string[] | null;
+  published_at: Date | null;
+}
+
+function mapRow(row: JobRow): Job {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    externalId: row.external_id,
+    title: row.title,
+    url: row.url,
+    description: row.description,
+    budgetMin: row.budget_min !== null ? Number(row.budget_min) : null,
+    budgetMax: row.budget_max !== null ? Number(row.budget_max) : null,
+    budgetType: row.budget_type,
+    clientRating: row.client_rating !== null ? Number(row.client_rating) : null,
+    clientReviews: row.client_reviews,
+    location: row.location,
+    rawTags: row.raw_tags ?? [],
+    publishedAt: row.published_at,
+  };
+}
+
 export async function insertMany(jobs: NewJob[]): Promise<number> {
   if (jobs.length === 0) {
     return 0;
@@ -61,4 +114,21 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
   }
 
   return insertedCount;
+}
+
+export async function findUnnotifiedForUser(userId: number): Promise<Job[]> {
+  const result = await pool.query<JobRow>(
+    `SELECT j.id, j.source_id, j.external_id, j.title, j.url, j.description,
+            j.budget_min, j.budget_max, j.budget_type,
+            j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at
+     FROM jobs j
+     WHERE j.scraped_at > NOW() - INTERVAL '1 hour'
+       AND NOT EXISTS (
+           SELECT 1 FROM notifications n
+           WHERE n.job_id = j.id
+             AND n.user_id = $1
+       )`,
+    [userId]
+  );
+  return result.rows.map(mapRow);
 }

@@ -64,3 +64,10 @@ export async function findById(id: number): Promise<User | null> {
   const row = result.rows[0];
   return row ? mapRow(row) : null;
 }
+
+export async function findAllActive(): Promise<User[]> {
+  const result = await pool.query<UserRow>(
+    `SELECT id, email, password_hash, name, active, created_at FROM users WHERE active = true`
+  );
+  return result.rows.map(mapRow);
+}
