@@ -14,17 +14,17 @@ export function Dashboard() {
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <StatusBanner lastCycle={status?.lastCycle ?? null} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card>
+        <Card className="overflow-hidden border-l-4 border-l-violet-500">
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground">Total de vagas coletadas</CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-semibold">{status?.totalJobs ?? 0}</CardContent>
+          <CardContent className="text-3xl font-bold text-violet-600">{status?.totalJobs ?? 0}</CardContent>
         </Card>
-        <Card>
+        <Card className="overflow-hidden border-l-4 border-l-cyan-500">
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground">Notificações enviadas</CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-semibold">{status?.totalNotificationsSent ?? 0}</CardContent>
+          <CardContent className="text-3xl font-bold text-cyan-600">{status?.totalNotificationsSent ?? 0}</CardContent>
         </Card>
       </div>
     </div>

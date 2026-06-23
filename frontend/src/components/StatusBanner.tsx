@@ -12,10 +12,16 @@ const STATUS_LABEL: Record<AlertLog['status'], string> = {
   failed: 'Falhou',
 };
 
-const STATUS_VARIANT: Record<AlertLog['status'], 'default' | 'destructive' | 'secondary'> = {
-  success: 'default',
-  partial: 'secondary',
-  failed: 'destructive',
+const STATUS_CLASSNAME: Record<AlertLog['status'], string> = {
+  success: 'bg-success text-success-foreground border-transparent',
+  partial: 'bg-warning text-warning-foreground border-transparent',
+  failed: 'bg-destructive text-white border-transparent',
+};
+
+const STATUS_BORDER: Record<AlertLog['status'], string> = {
+  success: 'border-success/30',
+  partial: 'border-warning/30',
+  failed: 'border-destructive/30',
 };
 
 export function StatusBanner({ lastCycle }: StatusBannerProps) {
@@ -28,9 +34,9 @@ export function StatusBanner({ lastCycle }: StatusBannerProps) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4">
+    <div className={`flex items-center justify-between rounded-lg border p-4 ${STATUS_BORDER[lastCycle.status]}`}>
       <div className="flex items-center gap-3">
-        <Badge variant={STATUS_VARIANT[lastCycle.status]}>{STATUS_LABEL[lastCycle.status]}</Badge>
+        <Badge className={STATUS_CLASSNAME[lastCycle.status]}>{STATUS_LABEL[lastCycle.status]}</Badge>
         <span className="text-sm text-muted-foreground">
           Último ciclo: {formatDate(lastCycle.executedAt)} — {lastCycle.jobsFound} vagas encontradas,{' '}
           {lastCycle.jobsNew} novas, {lastCycle.jobsNotified} notificadas.

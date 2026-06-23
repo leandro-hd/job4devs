@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthLayout } from '../../components/AuthLayout';
 import { useAuth } from '../../hooks/useAuth';
 
 export function Register() {
@@ -30,10 +31,10 @@ export function Register() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Card className="w-full max-w-sm">
+    <AuthLayout>
+      <Card className="w-full border-t-4 border-t-cyan-500 shadow-lg">
         <CardHeader>
-          <CardTitle>Criar conta no job4devs</CardTitle>
+          <CardTitle>Criar conta</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -57,18 +58,18 @@ export function Register() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-violet-600 hover:bg-violet-700">
               {loading ? 'Criando conta...' : 'Criar conta'}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               Já tem conta?{' '}
-              <Link to="/login" className="underline">
+              <Link to="/login" className="font-medium text-violet-600 hover:underline">
                 Entrar
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
-    </div>
+    </AuthLayout>
   );
 }
