@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
 import cors from 'cors';
+import { config } from './config';
 import authRoutes from './api/routes/auth.routes';
 import settingsRoutes from './api/routes/settings.routes';
 import jobsRoutes from './api/routes/jobs.routes';
@@ -9,7 +10,7 @@ import { errorHandler } from './api/middlewares/errorHandler';
 export function createApp(): Express {
   const app = express();
 
-  app.use(cors());
+  app.use(cors({ origin: config.frontendUrl }));
   app.use(express.json());
 
   app.get('/health', (_req, res) => {
