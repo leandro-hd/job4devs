@@ -7,6 +7,7 @@ import * as notificationsRepository from '../../db/repositories/notifications.re
 import * as logsRepository from '../../db/repositories/logs.repository';
 import * as filterService from '../../services/filter.service';
 import * as notificationService from '../../services/notification.service';
+import { logger } from '../../lib/logger';
 
 const SOURCE_NAME = '99freelas';
 
@@ -14,7 +15,7 @@ let isRunning = false;
 
 export async function runScrapeJob(): Promise<void> {
   if (isRunning) {
-    console.warn('[Worker] Previous cycle still running — skipping');
+    logger.warn('Previous cycle still running — skipping');
     return;
   }
   isRunning = true;
@@ -31,6 +32,7 @@ export async function runScrapeJob(): Promise<void> {
       scrapeResult = await scrapeAndStore();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      logger.error({ err }, 'Scrape failed — worker cycle aborted');
       await logsRepository.insert({
         sourceId: source.id,
         jobsFound: 0,
@@ -78,7 +80,7 @@ export async function runScrapeJob(): Promise<void> {
           await notificationsRepository.markFailed(pending.map((p) => p.id), message);
         }
       } catch (err) {
-        console.error(`[Worker] Failed processing user ${user.id}:`, err);
+        logger.warn({ err, userId: user.id }, 'Failed processing user — continuing with the rest of the cycle');
       }
     }
 
@@ -90,8 +92,19 @@ export async function runScrapeJob(): Promise<void> {
       status: scrapeResult.partial ? 'partial' : 'success',
       durationMs: Date.now() - startedAt,
     });
+
+    logger.info(
+      {
+        jobsFound: scrapeResult.jobsFound,
+        jobsNew: scrapeResult.jobsNew,
+        jobsNotified,
+        status: scrapeResult.partial ? 'partial' : 'success',
+        durationMs: Date.now() - startedAt,
+      },
+      'Worker cycle finished'
+    );
   } catch (err) {
-    console.error('[Worker] Unexpected error during scrape cycle:', err);
+    logger.error({ err }, 'Unexpected error during scrape cycle');
   } finally {
     isRunning = false;
   }

@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 interface Config {
+  nodeEnv: string;
   port: number;
   databaseUrl: string;
   jwtSecret: string;
@@ -27,6 +28,7 @@ function required(name: string): string {
 }
 
 export const config: Config = {
+  nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 3000),
   databaseUrl: required('DATABASE_URL'),
   jwtSecret: required('JWT_SECRET'),

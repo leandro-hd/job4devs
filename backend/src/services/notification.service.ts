@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { config } from '../config';
+import { logger } from '../lib/logger';
 
 const transporter = nodemailer.createTransport({
   host: config.smtp.host,
@@ -80,10 +81,16 @@ function buildEmailTemplate(jobs: AlertJob[]): string {
 // One email per user per cycle — batch jobs into a single message.
 // Do NOT send one email per job.
 export async function sendAlert(recipientEmail: string, jobs: AlertJob[]): Promise<void> {
-  await transporter.sendMail({
-    from: `"job4devs" <${config.smtp.user}>`,
-    to: recipientEmail,
-    subject: `🔔 ${jobs.length} nova${jobs.length === 1 ? '' : 's'} vaga${jobs.length === 1 ? '' : 's'} encontrada${jobs.length === 1 ? '' : 's'} — job4devs`,
-    html: buildEmailTemplate(jobs),
-  });
+  try {
+    await transporter.sendMail({
+      from: `"job4devs" <${config.smtp.user}>`,
+      to: recipientEmail,
+      subject: `🔔 ${jobs.length} nova${jobs.length === 1 ? '' : 's'} vaga${jobs.length === 1 ? '' : 's'} encontrada${jobs.length === 1 ? '' : 's'} — job4devs`,
+      html: buildEmailTemplate(jobs),
+    });
+    logger.info({ recipient: recipientEmail, jobCount: jobs.length }, 'Alert email sent');
+  } catch (err) {
+    logger.error({ err, recipient: recipientEmail, jobCount: jobs.length }, 'Failed to send alert email');
+    throw err;
+  }
 }

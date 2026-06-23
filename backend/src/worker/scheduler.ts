@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { runScrapeJob } from './jobs/scrape.job';
 import { config } from '../config';
+import { logger } from '../lib/logger';
 
 export function startScheduler(): void {
   const interval = config.defaultCronIntervalMinutes;
@@ -10,5 +11,5 @@ export function startScheduler(): void {
     await runScrapeJob();
   });
 
-  console.log(`[Scheduler] Worker running every ${interval} minutes`);
+  logger.info({ intervalMinutes: interval }, 'Scheduler started');
 }
