@@ -22,7 +22,7 @@ export function Register() {
     setLoading(true);
     try {
       await register(email, password, name);
-      navigate('/');
+      navigate('/login?registered=true');
     } catch {
       setError('Não foi possível criar a conta. Verifique os dados e tente novamente.');
     } finally {

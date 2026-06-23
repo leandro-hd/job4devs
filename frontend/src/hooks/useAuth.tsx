@@ -22,9 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
-    const response = await authService.register({ email, password, name });
-    setAuthToken(response.token);
-    setUser(response.user);
+    // Intentionally does not call setAuthToken/setUser — registration only
+    // creates the account. The user logs in explicitly afterwards.
+    await authService.register({ email, password, name });
   }, []);
 
   const logout = useCallback(() => {

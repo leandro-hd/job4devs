@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { useAuth } from '../../hooks/useAuth';
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const justRegistered = searchParams.get('registered') === 'true';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +38,11 @@ export function Login() {
           <CardTitle>Entrar</CardTitle>
         </CardHeader>
         <CardContent>
+          {justRegistered && (
+            <p className="mb-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+              Conta criada com sucesso! Faça login para continuar.
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">E-mail</Label>
