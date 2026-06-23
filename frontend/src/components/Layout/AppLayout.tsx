@@ -8,7 +8,7 @@ export function AppLayout() {
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Header />
-        <main className="flex-1 p-6">
+        <main className="flex-1 bg-gradient-to-br from-violet-50 via-background to-cyan-50 p-6">
           <Outlet />
         </main>
       </div>

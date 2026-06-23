@@ -18,23 +18,23 @@ const STATUS_CLASSNAME: Record<AlertLog['status'], string> = {
   failed: 'bg-destructive text-white border-transparent',
 };
 
-const STATUS_BORDER: Record<AlertLog['status'], string> = {
-  success: 'border-success/30',
-  partial: 'border-warning/30',
-  failed: 'border-destructive/30',
+const STATUS_BOX: Record<AlertLog['status'], string> = {
+  success: 'border-success/30 bg-success/10',
+  partial: 'border-warning/30 bg-warning/10',
+  failed: 'border-destructive/30 bg-destructive/10',
 };
 
 export function StatusBanner({ lastCycle }: StatusBannerProps) {
   if (!lastCycle) {
     return (
-      <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+      <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
         Nenhum ciclo do worker rodou ainda.
       </div>
     );
   }
 
   return (
-    <div className={`flex items-center justify-between rounded-lg border p-4 ${STATUS_BORDER[lastCycle.status]}`}>
+    <div className={`flex items-center justify-between rounded-lg border p-4 ${STATUS_BOX[lastCycle.status]}`}>
       <div className="flex items-center gap-3">
         <Badge className={STATUS_CLASSNAME[lastCycle.status]}>{STATUS_LABEL[lastCycle.status]}</Badge>
         <span className="text-sm text-muted-foreground">
