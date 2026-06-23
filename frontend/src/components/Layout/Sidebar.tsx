@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Logo } from '../Logo';
 
@@ -11,9 +11,9 @@ const LINKS = [
 export function Sidebar() {
   return (
     <aside className="w-48 border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground">
-      <div className="mb-6">
+      <Link to="/" className="mb-6 block transition-opacity hover:opacity-80">
         <Logo />
-      </div>
+      </Link>
       <nav className="flex flex-col gap-1">
         {LINKS.map((link) => (
           <NavLink
