@@ -2,6 +2,8 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import authRoutes from './api/routes/auth.routes';
 import settingsRoutes from './api/routes/settings.routes';
+import jobsRoutes from './api/routes/jobs.routes';
+import statusRoutes from './api/routes/status.routes';
 import { errorHandler } from './api/middlewares/errorHandler';
 
 export function createApp(): Express {
@@ -16,6 +18,8 @@ export function createApp(): Express {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/settings', settingsRoutes);
+  app.use('/api/jobs', jobsRoutes);
+  app.use('/api/status', statusRoutes);
 
   app.use(errorHandler);
 

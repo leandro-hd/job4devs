@@ -69,6 +69,14 @@ export async function findPendingForUser(userId: number): Promise<PendingNotific
   }));
 }
 
+export async function countSentForUser(userId: number): Promise<number> {
+  const result = await pool.query<{ count: string }>(
+    `SELECT count(*) FROM notifications WHERE user_id = $1 AND status = 'sent'`,
+    [userId]
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
 export async function markSent(ids: number[]): Promise<void> {
   if (ids.length === 0) {
     return;

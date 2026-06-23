@@ -116,6 +116,53 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
   return insertedCount;
 }
 
+export async function countAll(): Promise<number> {
+  const result = await pool.query<{ count: string }>(`SELECT count(*) FROM jobs`);
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+export interface JobWithSource extends Job {
+  sourceName: string;
+}
+
+interface JobWithSourceRow extends JobRow {
+  source_name: string;
+}
+
+function mapRowWithSource(row: JobWithSourceRow): JobWithSource {
+  return {
+    ...mapRow(row),
+    sourceName: row.source_name,
+  };
+}
+
+export async function findPaginated(
+  page: number,
+  limit: number
+): Promise<{ jobs: JobWithSource[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  const [jobsResult, countResult] = await Promise.all([
+    pool.query<JobWithSourceRow>(
+      `SELECT j.id, j.source_id, j.external_id, j.title, j.url, j.description,
+              j.budget_min, j.budget_max, j.budget_type,
+              j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at,
+              s.name AS source_name
+       FROM jobs j
+       JOIN sources s ON s.id = j.source_id
+       ORDER BY j.published_at DESC NULLS LAST
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    ),
+    pool.query<{ count: string }>(`SELECT count(*) FROM jobs`),
+  ]);
+
+  return {
+    jobs: jobsResult.rows.map(mapRowWithSource),
+    total: Number(countResult.rows[0]?.count ?? 0),
+  };
+}
+
 export async function findUnnotifiedForUser(userId: number): Promise<Job[]> {
   const result = await pool.query<JobRow>(
     `SELECT j.id, j.source_id, j.external_id, j.title, j.url, j.description,
