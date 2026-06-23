@@ -5,7 +5,7 @@ do [99freelas](https://www.99freelas.com.br), casa as vagas novas com palavras-c
 configuradas por cada usuário, e manda um e-mail batched quando encontra algo
 relevante — sem precisar abrir o site pra checar manualmente.
 
-**🔗 Live:** [job4devs.vercel.app](https://job4devs.vercel.app)
+**🔗 Live:** [job4devs.dev](https://job4devs.dev)
 
 > Projeto pessoal e peça de portfólio — não é um produto comercial.
 

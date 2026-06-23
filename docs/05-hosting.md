@@ -4,10 +4,10 @@
 
 | Camada | Serviço | Custo | URL |
 |---|---|---|---|
-| **Frontend** | Vercel | Gratuito | `job4devs.vercel.app` (custom domain pendente) |
-| **Backend** | Railway | ~$5/mês (cobra a diferença se o uso passar do crédito incluso) | `job4devs-production.up.railway.app` |
+| **Frontend** | Vercel | Gratuito | [`job4devs.dev`](https://job4devs.dev) |
+| **Backend** | Railway | ~$5/mês (cobra a diferença se o uso passar do crédito incluso) | `api.job4devs.dev` |
 | **Database** | Railway PostgreSQL | Incluso no mesmo crédito do backend | Interno ao projeto Railway |
-| **Domínio** | Porkbun | ~$10–13/ano (`.dev`) | `job4devs.dev` (em processo de compra) |
+| **Domínio** | Namecheap | $12,98 no 1º ano + $0,20 taxa ICANN (`.dev`) | `job4devs.dev` |
 
 **Custo total estimado: a partir de ~$5/mês + domínio.** Não é um teto garantido —
 é uma taxa fixa que já inclui um crédito de uso; se o consumo real (CPU/memória/
@@ -102,39 +102,52 @@ API_URL=<URL pública deste próprio serviço>
 
 ## Domínio
 
-Opções recomendadas por prioridade:
+Opções consideradas:
 
 | Domínio | Tom | Indicado para |
 |---|---|---|
-| `job4devs.dev` | Técnico, moderno | Portfólio internacional |
+| `job4devs.dev` (escolhido) | Técnico, moderno | Portfólio internacional |
 | `job4devs.com` | Produto real | Portfólio geral |
 | `job4devs.com.br` | Mercado BR | Portfólio local |
 
-**.dev é a escolha confirmada** — o TLD comunica o público-alvo e é reconhecido
+**.dev foi a escolha confirmada** — o TLD comunica o público-alvo e é reconhecido
 no mercado tech. (Tem uma repetição sutil de "devs"/".dev" no nome completo —
 considerado e aceito; reforça o sinal "isso é pra devs" em vez de diluir.)
 
-**Onde comprar — comparativo real de preço (não confiar em sticker price sem
-checar renovação):**
+**Onde comprar — comparativo real de preço e suporte (não confiar em sticker
+price sem checar renovação nem em pricing de blog de afiliado — vários números
+abaixo só foram confirmados depois de bater com o preço real no checkout):**
 
-| Registrador | Preço `.dev` | Observação |
-|---|---|---|
-| **Porkbun** (escolhido) | sem aumento surpresa na renovação | interface simples, sem upsell agressivo |
-| Cloudflare Registrar | ~$10,44/ano, at-cost | mesmo preço todo ano; bom se já usar Cloudflare pra DNS/CDN |
-| Namecheap | $5,98/ano no 1º ano | renovação historicamente mais alta — evitar pra cálculo de custo real |
-| ⚠️ GoDaddy | — | evitar — mudança de ToS em fev/2026 removeu proteções de consumidor |
-| AWS Route 53 | ~ mercado, sem desconto | cobra ~$0,50/mês extra de hosted zone se também usar pra DNS; sem sinergia já que o app não está na AWS |
-| Registro.br (`.com.br`) | R$40/ano fixo, oficial | melhor opção se decidir por `.com.br` em vez de `.dev` |
+| Registrador | Preço `.dev` real | Suporte | Observação |
+|---|---|---|---|
+| ⚠️ Porkbun | não chegamos a pagar | — | conta nova travou **5h30 na verificação de identidade**, antes até de chegar na tela de pagamento; suporte só respondeu "vamos abrir ticket interno", sem prazo. Abandonado. |
+| Cloudflare Registrar | $12,20/ano, at-cost (confirmado) | só ticket no tier gratuito, SLA de 24h mas relatos reais de dias/semanas; sem chat ao vivo | mesmo preço todo ano, mas o ganho de preço (~$0,78/ano vs Namecheap) não compensa o risco de suporte se algo travar |
+| **Namecheap (escolhido)** | $12,98 no 1º ano + $0,20 ICANN = $13,18 (confirmado no checkout) | chat ao vivo 24/7, 3–12 min de espera, resolve domínio/DNS em <10 min | renovação tende a subir — anotar lembrete de calendário pra reavaliar antes do vencimento |
+| ⚠️ GoDaddy | — | — | evitar — mudança de ToS em fev/2026 removeu proteções de consumidor |
+| AWS Route 53 | ~$12/ano, sem desconto | — | cobra ~$0,50/mês extra de hosted zone se também usar pra DNS; sem sinergia já que o app não está na AWS |
+| Registro.br (`.com.br`) | R$40/ano fixo, oficial | — | melhor opção se decidir por `.com.br` em vez de `.dev` |
 
-**DNS config (depois que `job4devs.dev` estiver ativo):**
+**Auto-renew foi desativado** nessa conta — colocar lembrete de calendário ~1
+mês antes do vencimento, já que sem auto-renew o domínio pode expirar e ser
+liberado pra qualquer pessoa registrar (inclusive especuladores).
+
+**DNS real configurado no Namecheap (Advanced DNS → Host Records):**
 ```
-# Frontend (Vercel)
-job4devs.dev          → registro que a Vercel indicar no painel do projeto
-www.job4devs.dev       CNAME  cname.vercel-dns.com
+# Frontend (Vercel) — job4devs.dev é o domínio primário, www redireciona pra ele
+A      @     216.198.79.1
+CNAME  www   4c6fb5814a6ecb2e.vercel-dns-017.com.
 
-# Backend (Railway)
-api.job4devs.dev      CNAME  <target que o Railway indicar ao adicionar o domínio>
+# Backend (Railway) — exige DOIS registros, não só o CNAME
+CNAME  api                    znnfgrif.up.railway.app.
+TXT    _railway-verify.api    railway-verify=<valor exato mostrado no painel do Railway>
 ```
+
+**Pegadinha real que encontramos:** o Railway mostra "Waiting for DNS update"
+mesmo com o CNAME já propagado (confirmamos via `dig @1.1.1.1` e `dig @8.8.8.8`)
+porque ele também exige um registro **TXT** de verificação separado
+(`_railway-verify.<subdomínio>`). Sem esse segundo registro, o certificado SSL
+nunca é emitido — clique em "Show DNS records" no painel do Railway pra ver os
+dois valores exatos exigidos, não só o CNAME que aparece na primeira tela.
 
 ---
 
@@ -177,23 +190,29 @@ Health check path: /health
 - [x] `frontend/vercel.json` com fallback de SPA
 
 ### Pós-deploy
-- [x] HTTPS funcionando nas URLs padrão (`*.vercel.app` / `*.up.railway.app`)
+- [x] HTTPS funcionando no domínio final (`job4devs.dev` / `api.job4devs.dev`)
 - [x] Login e registro funcionando em produção
-- [x] Worker executando (`alert_logs` crescendo com ciclos reais, não só o
+- [x] Worker executando (`alert_logs` crescendo com ciclos reais — confirmado
+      total de vagas subindo de 135 → 170 entre verificações, não só no
       primeiro deploy)
 - [ ] E-mail de alerta chegando corretamente (ainda cai em spam — conta de envio
       nova, ver `docs/04-risks.md`)
 - [x] Dashboard mostrando status do último ciclo com dados reais
-- [ ] Toggle "Serverless" do Railway confirmado desativado de forma permanente
-      (checar de novo depois de qualquer redeploy)
+- [x] Toggle "Serverless" do Railway confirmado desativado
 
-### Domínio customizado (pendente — aguardando verificação de identidade na Porkbun)
-- [ ] `job4devs.dev` registrado
-- [ ] Domínio adicionado no projeto Vercel + registro DNS configurado
-- [ ] Domínio adicionado no serviço Railway + CNAME configurado
-- [ ] `FRONTEND_URL`/`API_URL`/`VITE_API_URL` atualizados pras URLs finais
+### Domínio customizado
+- [x] `job4devs.dev` registrado (Namecheap)
+- [x] Domínio adicionado no projeto Vercel + DNS configurado (`job4devs.dev`
+      como primário, `www.job4devs.dev` redirecionando pra ele)
+- [x] Domínio adicionado no serviço Railway + CNAME + TXT de verificação
+      configurados (`api.job4devs.dev`)
+- [x] `FRONTEND_URL`/`API_URL`/`VITE_API_URL` atualizados pras URLs finais e
+      verificados (CORS refletindo `https://job4devs.dev`, sem erros de
+      console no fluxo completo)
 
 ### Portfolio-ready
 - [x] README na raiz do repo com link ao vivo, stack e screenshots
-- [ ] Domínio customizado configurado (sem URLs `.vercel.app`/`.up.railway.app`)
+- [x] Domínio customizado configurado (sem URLs `.vercel.app`/`.up.railway.app`
+      visíveis pro usuário final)
 - [ ] Projeto estável por 48h antes de divulgar
+- [ ] Lembrete de calendário pra renovação do domínio (auto-renew desativado)
