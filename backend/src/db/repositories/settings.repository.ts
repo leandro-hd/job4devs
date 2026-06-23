@@ -16,3 +16,7 @@ export async function upsert(userId: number, key: string, value: string): Promis
     [userId, key, value]
   );
 }
+
+export async function remove(userId: number, key: string): Promise<void> {
+  await pool.query(`DELETE FROM user_settings WHERE user_id = $1 AND key = $2`, [userId, key]);
+}

@@ -58,7 +58,9 @@ export async function runScrapeJob(): Promise<void> {
           const matched = unseenJobs.filter((job) => filterService.matchesKeywords(job, keywords));
 
           if (matched.length > 0) {
-            const recipient = settings.get('notification_email') ?? user.email;
+            // `||`, not `??` — an empty string is never a valid recipient,
+            // so it should fall back to the account email just like "unset".
+            const recipient = settings.get('notification_email') || user.email;
             await notificationsRepository.insertPendingMany(
               matched.map((job) => ({ userId: user.id, jobId: job.id, recipient }))
             );

@@ -21,22 +21,23 @@ export async function updateSettings(req: AuthenticatedRequest, res: Response): 
   }
 
   const body = req.body as Record<string, unknown>;
-  const updates: Array<[string, string]> = [];
+  const providedKeys = ALLOWED_KEYS.filter((key) => body[key] !== undefined);
 
-  for (const key of ALLOWED_KEYS) {
-    const value = body[key];
-    if (value !== undefined) {
-      updates.push([key, String(value)]);
-    }
-  }
-
-  if (updates.length === 0) {
+  if (providedKeys.length === 0) {
     res.status(400).json({ error: 'No valid settings provided' });
     return;
   }
 
-  for (const [key, value] of updates) {
-    await settingsRepository.upsert(req.userId, key, value);
+  for (const key of providedKeys) {
+    const value = String(body[key]).trim();
+    // An empty value means "clear this setting", not "store an empty string" —
+    // otherwise downstream `?? fallback` reads never trigger (`''` isn't
+    // null/undefined), e.g. notification_email staying blank forever.
+    if (value === '') {
+      await settingsRepository.remove(req.userId, key);
+    } else {
+      await settingsRepository.upsert(req.userId, key, value);
+    }
   }
 
   const settings = await settingsRepository.getByUserId(req.userId);
