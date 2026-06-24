@@ -36,9 +36,9 @@ e-mail notifications. Built as a **personal tool and portfolio project**.
 | Frontend | React + Vite |
 | UI | Tailwind CSS + shadcn/ui |
 | Frontend hosting | Vercel |
-| Backend hosting | Render (paid — no cold start) |
-| Database hosting | Render PostgreSQL (managed) |
-| Domain | job4devs.com / job4devs.com.br / job4devs.dev |
+| Backend hosting | Railway (paid — no cold start) |
+| Database hosting | Railway PostgreSQL (managed) |
+| Domain | job4devs.dev |
 | Config | dotenv |
 
 ---
