@@ -18,6 +18,76 @@ users ──1:N──► notifications ◄──N:1── jobs ──N:1── s
 sources ──1:N──► alert_logs
 ```
 
+## ERD (Mermaid)
+
+```mermaid
+erDiagram
+    SOURCES ||--o{ JOBS : "origina"
+    SOURCES ||--o{ ALERT_LOGS : "origina"
+    USERS ||--o{ USER_SETTINGS : "configura"
+    USERS ||--o{ NOTIFICATIONS : "recebe"
+    JOBS ||--o{ NOTIFICATIONS : "gera"
+
+    SOURCES {
+        serial id PK
+        varchar name UK
+        varchar base_url
+        boolean active
+    }
+
+    USERS {
+        serial id PK
+        varchar email UK
+        varchar password_hash
+        varchar name
+        boolean active
+    }
+
+    USER_SETTINGS {
+        serial id PK
+        int user_id FK
+        varchar key
+        text value
+    }
+
+    JOBS {
+        serial id PK
+        int source_id FK
+        varchar external_id
+        varchar title
+        varchar url
+        numeric budget_min
+        numeric budget_max
+        numeric client_rating
+        timestamptz published_at
+    }
+
+    NOTIFICATIONS {
+        serial id PK
+        int user_id FK
+        int job_id FK
+        varchar channel
+        varchar status
+        timestamptz sent_at
+    }
+
+    ALERT_LOGS {
+        serial id PK
+        int source_id FK
+        int jobs_found
+        int jobs_new
+        int jobs_notified
+        varchar status
+    }
+```
+
+> Imagem renderizada: [`docs/diagrams/database-erd.png`](diagrams/database-erd.png)
+>
+> `user_settings (user_id, key)`, `jobs (source_id, external_id)` e
+> `notifications (user_id, job_id)` têm constraints `UNIQUE` compostas — o
+> diagrama não marca `UK` em colunas individuais nesses casos para não sugerir
+> unicidade isolada onde na verdade é a combinação das duas colunas.
+
 ---
 
 ## Full DDL

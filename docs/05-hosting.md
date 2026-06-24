@@ -19,6 +19,25 @@ portfólio), tende a ficar perto do mínimo.
 > página), o projeto foi pro ar em **Railway + Vercel**. A seção sobre Render fica
 > registrada mais abaixo como alternativa válida, não como recomendação principal.
 
+### Diagrama de infraestrutura
+
+```mermaid
+flowchart LR
+    DEV["💻 git push origin main"] --> GH["GitHub\nrepo privado"]
+
+    GH -->|auto-deploy| VERCEL["Vercel\nFrontend"]
+    GH -->|auto-deploy| RAILWAY["Railway\nBackend + PostgreSQL"]
+
+    DOMAIN["job4devs.dev\n(Namecheap)"]
+    DOMAIN -->|"A @"| VERCEL
+    DOMAIN -->|"CNAME api + TXT verify"| RAILWAY
+
+    VERCEL -.->|HTTPS| VISITOR(["👤 Visitante"])
+    RAILWAY -.->|"HTTPS / REST"| VISITOR
+```
+
+> Imagem renderizada: [`docs/diagrams/infrastructure.png`](diagrams/infrastructure.png)
+
 ---
 
 ## Frontend — Vercel

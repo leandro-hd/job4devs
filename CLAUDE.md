@@ -69,6 +69,33 @@ e-mail notifications. Built as a **personal tool and portfolio project**.
   5. Process `pending` notifications → send email → `UPDATE status`
   6. Write result to `alert_logs`
 
+```mermaid
+sequenceDiagram
+    participant Cron as node-cron (Scheduler)
+    participant Scraper as ScraperService
+    participant DB as PostgreSQL
+    participant Filter as FilterService
+    participant Mail as NotificationService (SMTP)
+
+    Cron->>Scraper: dispara ciclo (a cada N min)
+    Scraper->>Scraper: GET páginas da fonte (até MAX_PAGES)
+    Scraper->>DB: INSERT INTO jobs ... ON CONFLICT DO NOTHING
+    Scraper->>DB: busca jobs ainda não notificados, por usuário
+
+    loop para cada usuário ativo
+        DB->>Filter: keywords (user_settings) + jobs candidatos
+        Filter->>Filter: aplica filtro por keyword
+        Filter->>DB: INSERT INTO notifications (pending) ON CONFLICT DO NOTHING
+        DB->>Mail: notificações pendentes do usuário
+        Mail->>Mail: envia e-mail com as vagas
+        Mail->>DB: UPDATE notifications SET status = sent/failed
+    end
+
+    Scraper->>DB: INSERT INTO alert_logs (resultado do ciclo)
+```
+
+> Imagem renderizada: [`docs/diagrams/worker-flow.png`](docs/diagrams/worker-flow.png)
+
 ---
 
 ## Environment Variables (`.env.example`)

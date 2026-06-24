@@ -1,0 +1,58 @@
+erDiagram
+    SOURCES ||--o{ JOBS : "origina"
+    SOURCES ||--o{ ALERT_LOGS : "origina"
+    USERS ||--o{ USER_SETTINGS : "configura"
+    USERS ||--o{ NOTIFICATIONS : "recebe"
+    JOBS ||--o{ NOTIFICATIONS : "gera"
+
+    SOURCES {
+        serial id PK
+        varchar name UK
+        varchar base_url
+        boolean active
+    }
+
+    USERS {
+        serial id PK
+        varchar email UK
+        varchar password_hash
+        varchar name
+        boolean active
+    }
+
+    USER_SETTINGS {
+        serial id PK
+        int user_id FK
+        varchar key
+        text value
+    }
+
+    JOBS {
+        serial id PK
+        int source_id FK
+        varchar external_id
+        varchar title
+        varchar url
+        numeric budget_min
+        numeric budget_max
+        numeric client_rating
+        timestamptz published_at
+    }
+
+    NOTIFICATIONS {
+        serial id PK
+        int user_id FK
+        int job_id FK
+        varchar channel
+        varchar status
+        timestamptz sent_at
+    }
+
+    ALERT_LOGS {
+        serial id PK
+        int source_id FK
+        int jobs_found
+        int jobs_new
+        int jobs_notified
+        varchar status
+    }

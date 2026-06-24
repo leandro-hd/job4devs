@@ -36,6 +36,38 @@
 They are fully isolated modules — coupling them is forbidden. Splitting into
 separate processes or containers in the future requires zero refactoring.
 
+### Diagrama renderizado
+
+```mermaid
+flowchart TB
+    User(["👤 Usuário"])
+
+    subgraph VERCEL["Vercel"]
+        FE["Frontend — React + Vite\nDashboard · Feed · Settings · Auth"]
+    end
+
+    subgraph RAILWAY["Railway"]
+        subgraph BACKEND["Backend — 1 processo Node.js"]
+            API["API (Express)\n/auth /jobs /notifications /settings /status"]
+            WORKER["Worker (node-cron)\nScheduler → Scraper → Filter → Notification"]
+        end
+        DB[("PostgreSQL\nusers · jobs · notifications\nuser_settings · alert_logs · sources")]
+    end
+
+    FREELAS["99freelas.com.br"]
+    SMTP["Gmail SMTP"]
+
+    User -->|HTTPS| FE
+    FE -->|"REST + JWT"| API
+    API --> DB
+    WORKER --> DB
+    WORKER -->|scraping periódico| FREELAS
+    WORKER -->|e-mail de alerta| SMTP
+    SMTP -.->|entrega| User
+```
+
+> Imagem renderizada: [`docs/diagrams/architecture.png`](diagrams/architecture.png)
+
 ---
 
 ## Backend Folder Structure
