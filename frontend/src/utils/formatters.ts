@@ -9,6 +9,19 @@ export function formatDate(value: string | null): string {
   });
 }
 
+export function formatDateTime(value: string | null): string {
+  if (!value) {
+    return '—';
+  }
+  return new Date(value).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function formatBudget(min: number | null, max: number | null, type: string): string {
   if (type !== 'fixed' && type !== 'hourly') {
     return 'A combinar';
