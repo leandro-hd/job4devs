@@ -36,8 +36,8 @@
 
 ### Hosting
 - Full setup as specified in `docs/05-hosting.md`
-- Frontend live at `app.job4devs.com`
-- API live at `api.job4devs.com`
+- Frontend live at `job4devs.dev`
+- API live at `api.job4devs.dev`
 
 ---
 
