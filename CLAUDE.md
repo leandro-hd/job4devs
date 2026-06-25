@@ -32,7 +32,7 @@ e-mail notifications. Built as a **personal tool and portfolio project**.
 | Database | PostgreSQL |
 | ORM/Query | pg (node-postgres) — raw SQL via repositories |
 | Auth | JWT (email + password) |
-| E-mail | Nodemailer + Gmail SMTP |
+| E-mail | Resend (HTTP API) |
 | Frontend | React + Vite |
 | UI | Tailwind CSS + shadcn/ui |
 | Frontend hosting | Vercel |
@@ -50,7 +50,7 @@ e-mail notifications. Built as a **personal tool and portfolio project**.
 3. **API and Worker are isolated modules** running in the same process. Never couple them.
 4. **Deduplication is enforced at the database level** via UNIQUE constraints — not in application code.
 5. **No `process.env` reads outside `src/config/index.ts`.**
-6. **Sensitive credentials (SMTP, JWT secret) stay in `.env` only** — never in the `settings` table.
+6. **Sensitive credentials (Resend API key, JWT secret) stay in `.env` only** — never in the `settings` table.
 
 ---
 
@@ -108,11 +108,9 @@ DATABASE_URL=postgresql://user:password@localhost:5432/job4devs
 JWT_SECRET=your_jwt_secret_here
 JWT_EXPIRES_IN=7d
 
-# Email (SMTP)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your@gmail.com
-SMTP_PASS=your_app_password
+# Email (Resend)
+RESEND_API_KEY=re_xxx
+EMAIL_FROM="job4devs <alerts@job4devs.dev>"
 
 # Worker
 DEFAULT_CRON_INTERVAL_MINUTES=5

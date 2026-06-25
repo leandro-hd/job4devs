@@ -90,15 +90,22 @@ toggle confirmado desativado (provavelmente resquício do container anterior
 ainda "esfriando" depois de um redeploy) — se a lentidão persistir por mais de
 alguns minutos depois de um deploy, esse toggle é o primeiro lugar a checar.
 
+**⚠️ O plano Hobby bloqueia totalmente as portas de saída SMTP** (25, 465, 587,
+2525) — confirmado na documentação oficial do Railway, "para prevenir spam e
+abuso". Só o plano Pro libera. Descobrimos isso na prática: e-mail de alerta
+parou de sair por 2 dias, primeiro com `ENETUNREACH` (tentativa via IPv6, sem
+rota), depois com `Connection timeout` mesmo forçando IPv4 — a porta é
+descartada pelo firewall do Railway independente do IP. Solução: trocar SMTP
+direto por um provedor de e-mail transacional via HTTPS (porta 443, nunca
+bloqueada). Este projeto usa **Resend**.
+
 **Variáveis de ambiente do serviço backend:**
 ```
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 JWT_SECRET=<gerar um valor forte — não usar o de dev local>
 JWT_EXPIRES_IN=7d
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=<conta Gmail dedicada para envio>
-SMTP_PASS=<App Password dessa conta>
+RESEND_API_KEY=<API key gerada no painel do Resend>
+EMAIL_FROM="job4devs <alerts@job4devs.dev>"
 DEFAULT_CRON_INTERVAL_MINUTES=5
 FRONTEND_URL=<URL da Vercel — usada para restringir o CORS>
 API_URL=<URL pública deste próprio serviço>
@@ -214,8 +221,9 @@ Health check path: /health
 - [x] Worker executando (`alert_logs` crescendo com ciclos reais — confirmado
       total de vagas subindo de 135 → 170 entre verificações, não só no
       primeiro deploy)
-- [ ] E-mail de alerta chegando corretamente (ainda cai em spam — conta de envio
-      nova, ver `docs/04-risks.md`)
+- [x] E-mail de alerta entregue corretamente (migrado de SMTP/Gmail para
+      Resend depois do bloqueio de porta no plano Hobby do Railway — testado
+      e confirmado, ver `docs/04-risks.md`)
 - [x] Dashboard mostrando status do último ciclo com dados reais
 - [x] Toggle "Serverless" do Railway confirmado desativado
 

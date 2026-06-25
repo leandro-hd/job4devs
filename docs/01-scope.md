@@ -19,7 +19,7 @@
 - [ ] 99freelas scraper (Axios + Cheerio, no browser headless)
 - [ ] node-cron scheduler with configurable interval (read from `user_settings`)
 - [ ] Per-user keyword filtering service
-- [ ] E-mail notification via Nodemailer + Gmail SMTP
+- [ ] E-mail notification via Resend (HTTP API)
 - [ ] Deduplication enforced via DB constraints (`ON CONFLICT DO NOTHING`)
 - [ ] `alert_logs` written after every worker cycle
 - [ ] Failure detection: worker logs `status = 'failed'` and error message on exception

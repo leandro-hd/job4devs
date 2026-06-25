@@ -100,7 +100,7 @@ backend/
 │   │   │       ├── freelas99.scraper.ts # 99freelas adapter
 │   │   │       └── upwork.scraper.ts    # Future: Upwork adapter (stub only)
 │   │   ├── filter.service.ts            # Keyword matching logic
-│   │   ├── notification.service.ts      # Email dispatch via Nodemailer
+│   │   ├── notification.service.ts      # Email dispatch via Resend
 │   │   └── deduplication.service.ts     # Thin wrapper — delegates to DB
 │   │
 │   ├── worker/

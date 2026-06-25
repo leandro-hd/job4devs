@@ -1,27 +1,11 @@
-import dns from 'node:dns/promises';
-import nodemailer, { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from '../config';
 import { logger } from '../lib/logger';
 
-// Railway has no outbound IPv6 route. smtp.gmail.com has both A and AAAA
-// records, and nodemailer's own dual-stack resolver picks one at random —
-// when it picks the AAAA address, the connection fails with ENETUNREACH.
-// Resolving the A record ourselves and connecting to that literal IPv4
-// address sidesteps nodemailer's resolver entirely. Re-resolved on every
-// call (not cached) since this process runs for days and Gmail's IPs can
-// rotate.
-async function getTransporter(): Promise<Transporter> {
-  const [ipv4Address] = await dns.resolve4(config.smtp.host);
-  return nodemailer.createTransport({
-    host: ipv4Address,
-    port: config.smtp.port,
-    tls: { servername: config.smtp.host },
-    auth: {
-      user: config.smtp.user,
-      pass: config.smtp.pass,
-    },
-  });
-}
+// Railway's Hobby plan blocks all outbound SMTP ports (25/465/587/2525) at
+// the network level — no code-level fix gets around that. Resend sends over
+// HTTPS instead, which is never blocked.
+const resend = new Resend(config.resendApiKey);
 
 export interface AlertJob {
   jobTitle: string;
@@ -94,13 +78,17 @@ function buildEmailTemplate(jobs: AlertJob[]): string {
 // Do NOT send one email per job.
 export async function sendAlert(recipientEmail: string, jobs: AlertJob[]): Promise<void> {
   try {
-    const transporter = await getTransporter();
-    await transporter.sendMail({
-      from: `"job4devs" <${config.smtp.user}>`,
+    const { error } = await resend.emails.send({
+      from: config.emailFrom,
       to: recipientEmail,
       subject: `🔔 ${jobs.length} nova${jobs.length === 1 ? '' : 's'} vaga${jobs.length === 1 ? '' : 's'} encontrada${jobs.length === 1 ? '' : 's'} — job4devs`,
       html: buildEmailTemplate(jobs),
     });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
     logger.info({ recipient: recipientEmail, jobCount: jobs.length }, 'Alert email sent');
   } catch (err) {
     logger.error({ err, recipient: recipientEmail, jobCount: jobs.length }, 'Failed to send alert email');

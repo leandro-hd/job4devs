@@ -8,12 +8,8 @@ interface Config {
   databaseUrl: string;
   jwtSecret: string;
   jwtExpiresIn: string;
-  smtp: {
-    host: string;
-    port: number;
-    user: string;
-    pass: string;
-  };
+  resendApiKey: string;
+  emailFrom: string;
   frontendUrl: string;
   apiUrl: string;
   defaultCronIntervalMinutes: number;
@@ -33,12 +29,8 @@ export const config: Config = {
   databaseUrl: required('DATABASE_URL'),
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
-  smtp: {
-    host: process.env.SMTP_HOST ?? '',
-    port: Number(process.env.SMTP_PORT ?? 587),
-    user: process.env.SMTP_USER ?? '',
-    pass: process.env.SMTP_PASS ?? '',
-  },
+  resendApiKey: required('RESEND_API_KEY'),
+  emailFrom: process.env.EMAIL_FROM ?? 'job4devs <alerts@job4devs.dev>',
   frontendUrl: process.env.FRONTEND_URL ?? '',
   apiUrl: process.env.API_URL ?? '',
   defaultCronIntervalMinutes: Number(process.env.DEFAULT_CRON_INTERVAL_MINUTES ?? 5),

@@ -99,23 +99,24 @@ In the MVP, a restart is required. Hot-reload is a post-MVP improvement.
 
 ## Email Notifications
 
+Sent via **Resend** (HTTP API), not SMTP — see "Known Risks" below for why.
+
 ```ts
 // notification.service.ts pattern
-const transporter = nodemailer.createTransport({
-  host: config.smtp.host,
-  port: config.smtp.port,
-  auth: { user: config.smtp.user, pass: config.smtp.pass },
-});
+const resend = new Resend(config.resendApiKey);
 
 // One email per user per cycle — batch jobs into a single message
 // Do NOT send one email per job. Users will unsubscribe immediately.
-async function sendAlert(user: User, jobs: Job[]): Promise<void> {
-  await transporter.sendMail({
-    from: config.smtp.user,
-    to: user.notificationEmail,
+async function sendAlert(recipientEmail: string, jobs: Job[]): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: config.emailFrom,
+    to: recipientEmail,
     subject: `[Job Alert] ${jobs.length} new job(s) found`,
     html: buildEmailTemplate(jobs),
   });
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 ```
 
@@ -129,7 +130,8 @@ async function sendAlert(user: User, jobs: Job[]): Promise<void> {
 |---|---|---|---|
 | 99freelas blocks scraper IP | Medium | High | Respect rate limits, use delays, add User-Agent headers |
 | 99freelas changes HTML layout | High (over time) | Medium | Selector validation + dashboard alert on 0 results |
-| Gmail SMTP rate limit | Low | Medium | MVP sends max 1 email/user/cycle — well within limits |
+| PaaS blocks outbound SMTP | High on shared/cheap plans | Critical | Confirmed on Railway's Hobby plan (ports 25/465/587/2525 blocked outright, no workaround) — send email over HTTPS via a transactional provider (Resend), never raw SMTP, when hosting on a platform with a cheap/shared tier |
+| Resend rate limit / free tier cap | Low | Medium | MVP sends max 1 email/user/cycle — well within the free tier's 3,000/month, 100/day |
 | Cron overlap (cycle takes longer than interval) | Low | Medium | Use a lock flag in memory to skip if previous cycle still running |
 | JWT secret exposed | Low | Critical | Never log JWT secret, keep in `.env` only, rotate if leaked |
 

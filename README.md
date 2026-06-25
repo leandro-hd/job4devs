@@ -28,7 +28,7 @@ relevante — sem precisar abrir o site pra checar manualmente.
 | Scraping | Axios + Cheerio |
 | Scheduling | node-cron |
 | Auth | JWT + bcrypt |
-| E-mail | Nodemailer + Gmail SMTP |
+| E-mail | Resend (HTTP API) |
 | Frontend | React + Vite + TypeScript, Tailwind v4 + shadcn/ui |
 | Hospedagem | Railway (backend + Postgres) + Vercel (frontend) |
 
@@ -55,7 +55,7 @@ docker compose up -d
 
 # Backend
 cd backend
-cp .env.example .env   # preencha SMTP_USER/SMTP_PASS com um Gmail real
+cp .env.example .env   # preencha RESEND_API_KEY com uma key real
 npm install
 npm run migrate
 npm run dev             # API em :3000 + worker
