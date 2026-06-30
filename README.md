@@ -1,5 +1,7 @@
 # job4devs
 
+![thumbnail](docs/assets/thumbnail.png)
+
 Sistema de alerta de vagas freelance para desenvolvedores. Faz scraping periódico
 do [99freelas](https://www.99freelas.com.br), casa as vagas novas com palavras-chave
 configuradas por cada usuário, e manda um e-mail batched quando encontra algo
