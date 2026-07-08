@@ -1,0 +1,10 @@
+{
+  "name": "job4devs-thumbnail",
+  "private": true,
+  "scripts": {
+    "render": "node render-thumbnail.js"
+  },
+  "dependencies": {
+    "playwright": "*"
+  }
+}
