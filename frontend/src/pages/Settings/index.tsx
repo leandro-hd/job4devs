@@ -1,21 +1,21 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSettings } from '../../hooks/useSettings';
+import { useSettings, type Settings as SettingsData } from '../../hooks/useSettings';
 
-export function Settings() {
-  const { settings, loading, saving, error, save } = useSettings();
-  const [keywords, setKeywords] = useState('');
-  const [minBudget, setMinBudget] = useState('');
-  const [notificationEmail, setNotificationEmail] = useState('');
+interface SettingsFormProps {
+  initial: SettingsData;
+  saving: boolean;
+  error: string | null;
+  save: (data: Partial<SettingsData>) => Promise<boolean>;
+}
+
+function SettingsForm({ initial, saving, error, save }: SettingsFormProps) {
+  const [keywords, setKeywords] = useState(initial.keywords ?? '');
+  const [minBudget, setMinBudget] = useState(initial.min_budget ?? '');
+  const [notificationEmail, setNotificationEmail] = useState(initial.notification_email ?? '');
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setKeywords(settings.keywords ?? '');
-    setMinBudget(settings.min_budget ?? '');
-    setNotificationEmail(settings.notification_email ?? '');
-  }, [settings]);
 
   async function handleSubmit(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -28,6 +28,40 @@ export function Settings() {
     setSaved(ok);
   }
 
+  return (
+    <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="keywords">Palavras-chave (separadas por vírgula)</Label>
+        <Input id="keywords" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="min_budget">Orçamento mínimo</Label>
+        <Input id="min_budget" type="number" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} />
+        <p className="text-xs text-muted-foreground">
+          Ainda não é usado para filtrar vagas — o 99freelas não expõe orçamento na listagem.
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="notification_email">E-mail de notificação</Label>
+        <Input
+          id="notification_email"
+          type="email"
+          value={notificationEmail}
+          onChange={(e) => setNotificationEmail(e.target.value)}
+        />
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {saved && <p className="text-sm text-green-600">Configurações salvas.</p>}
+      <Button type="submit" disabled={saving}>
+        {saving ? 'Salvando...' : 'Salvar'}
+      </Button>
+    </form>
+  );
+}
+
+export function Settings() {
+  const { settings, loading, saving, error, save } = useSettings();
+
   if (loading) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
   }
@@ -35,33 +69,7 @@ export function Settings() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Configurações</h1>
-      <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="keywords">Palavras-chave (separadas por vírgula)</Label>
-          <Input id="keywords" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="min_budget">Orçamento mínimo</Label>
-          <Input id="min_budget" type="number" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} />
-          <p className="text-xs text-muted-foreground">
-            Ainda não é usado para filtrar vagas — o 99freelas não expõe orçamento na listagem.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="notification_email">E-mail de notificação</Label>
-          <Input
-            id="notification_email"
-            type="email"
-            value={notificationEmail}
-            onChange={(e) => setNotificationEmail(e.target.value)}
-          />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {saved && <p className="text-sm text-green-600">Configurações salvas.</p>}
-        <Button type="submit" disabled={saving}>
-          {saving ? 'Salvando...' : 'Salvar'}
-        </Button>
-      </form>
+      <SettingsForm initial={settings} saving={saving} error={error} save={save} />
     </div>
   );
 }

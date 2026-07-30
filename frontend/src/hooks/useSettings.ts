@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import * as settingsService from '../services/settings.service';
 import type { Settings } from '../services/settings.service';
 
+export type { Settings };
+
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
