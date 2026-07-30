@@ -2,7 +2,7 @@ import { Response } from 'express';
 import * as settingsRepository from '../../db/repositories/settings.repository';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
-const ALLOWED_KEYS = ['keywords', 'min_budget', 'notification_email'] as const;
+const ALLOWED_KEYS = ['keywords', 'exclude_keywords', 'min_budget', 'notification_email'] as const;
 
 export async function getSettings(req: AuthenticatedRequest, res: Response): Promise<void> {
   if (!req.userId) {

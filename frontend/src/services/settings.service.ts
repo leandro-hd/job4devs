@@ -2,6 +2,7 @@ import { api } from './api';
 
 export interface Settings {
   keywords?: string;
+  exclude_keywords?: string;
   min_budget?: string;
   notification_email?: string;
 }

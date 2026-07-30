@@ -52,10 +52,15 @@ export async function runScrapeJob(): Promise<void> {
       try {
         const settings = await settingsRepository.getByUserId(user.id);
         const keywords = filterService.parseKeywords(settings.get('keywords'));
+        const excludeKeywords = filterService.parseKeywords(settings.get('exclude_keywords'));
 
         if (keywords.length > 0) {
           const unseenJobs = await jobsRepository.findUnnotifiedForUser(user.id);
-          const matched = unseenJobs.filter((job) => filterService.matchesKeywords(job, keywords));
+          const matched = unseenJobs.filter(
+            (job) =>
+              filterService.matchesKeywords(job, keywords) &&
+              !filterService.matchesKeywords(job, excludeKeywords)
+          );
 
           if (matched.length > 0) {
             // `||`, not `??` — an empty string is never a valid recipient,
