@@ -24,3 +24,11 @@ export async function login(params: { email: string; password: string }): Promis
   const { data } = await api.post<AuthResponse>('/api/auth/login', params);
   return data;
 }
+
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post('/api/auth/forgot-password', { email });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await api.post('/api/auth/reset-password', { token, password });
+}

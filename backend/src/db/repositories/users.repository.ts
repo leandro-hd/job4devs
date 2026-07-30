@@ -71,3 +71,30 @@ export async function findAllActive(): Promise<User[]> {
   );
   return result.rows.map(mapRow);
 }
+
+export async function saveResetToken(userId: number, token: string, expiresAt: Date): Promise<void> {
+  await pool.query(
+    `UPDATE users SET reset_token = $1, reset_token_expires_at = $2 WHERE id = $3`,
+    [token, expiresAt, userId]
+  );
+}
+
+export async function findByResetToken(token: string): Promise<User | null> {
+  const result = await pool.query<UserRow>(
+    `SELECT id, email, password_hash, name, active, created_at
+     FROM users
+     WHERE reset_token = $1 AND reset_token_expires_at > NOW()`,
+    [token]
+  );
+  const row = result.rows[0];
+  return row ? mapRow(row) : null;
+}
+
+export async function updatePassword(userId: number, passwordHash: string): Promise<void> {
+  await pool.query(
+    `UPDATE users
+     SET password_hash = $1, reset_token = NULL, reset_token_expires_at = NULL
+     WHERE id = $2`,
+    [passwordHash, userId]
+  );
+}

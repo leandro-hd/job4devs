@@ -74,6 +74,46 @@ function buildEmailTemplate(jobs: AlertJob[]): string {
 </html>`;
 }
 
+export async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: config.emailFrom,
+    to: recipientEmail,
+    subject: 'Redefinição de senha — job4devs',
+    html: `<!doctype html>
+<html lang="pt-BR">
+  <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:24px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+            <tr>
+              <td style="background-color:#7c3aed;background-image:linear-gradient(135deg,#7c3aed,#06b6d4);padding:24px 32px;">
+                <span style="color:#ffffff;font-size:22px;font-weight:bold;">🔔 job4devs</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <p style="margin:0 0 16px;font-size:16px;color:#111827;">Recebemos uma solicitação para redefinir a senha da sua conta.</p>
+                <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">O link abaixo é válido por 1 hora. Se você não solicitou isso, pode ignorar este e-mail.</p>
+                <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#7c3aed;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:15px;">Redefinir senha</a>
+                <p style="margin:24px 0 0;border-top:1px solid #e5e7eb;padding-top:16px;font-size:12px;color:#9ca3af;">Se o botão não funcionar, copie e cole este link no seu navegador:<br>${resetUrl}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  logger.info({ recipient: recipientEmail }, 'Password reset email sent');
+}
+
 // One email per user per cycle — batch jobs into a single message.
 // Do NOT send one email per job.
 export async function sendAlert(recipientEmail: string, jobs: AlertJob[]): Promise<void> {

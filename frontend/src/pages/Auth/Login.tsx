@@ -12,6 +12,7 @@ export function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const justRegistered = searchParams.get('registered') === 'true';
+  const justReset = searchParams.get('reset') === 'true';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,11 @@ export function Login() {
               Conta criada com sucesso! Faça login para continuar.
             </p>
           )}
+          {justReset && (
+            <p className="mb-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+              Senha redefinida com sucesso! Faça login com a nova senha.
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">E-mail</Label>
@@ -62,6 +68,11 @@ export function Login() {
             <Button type="submit" disabled={loading} className="bg-violet-600 hover:bg-violet-700">
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              <Link to="/forgot-password" className="font-medium text-violet-600 hover:underline">
+                Esqueci minha senha
+              </Link>
+            </p>
             <p className="text-center text-sm text-muted-foreground">
               Não tem conta?{' '}
               <Link to="/register" className="font-medium text-violet-600 hover:underline">

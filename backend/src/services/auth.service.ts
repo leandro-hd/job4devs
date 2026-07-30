@@ -1,7 +1,9 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 import { config } from '../config';
 import * as usersRepository from '../db/repositories/users.repository';
+import * as notificationService from './notification.service';
 
 const SALT_ROUNDS = 10;
 
@@ -67,4 +69,28 @@ export async function loginUser(params: {
 export async function getUserById(id: number): Promise<PublicUser | null> {
   const user = await usersRepository.findById(id);
   return user ? toPublicUser(user) : null;
+}
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const user = await usersRepository.findByEmail(email);
+  // Always resolve silently — don't reveal whether the email is registered.
+  if (!user) return;
+
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+  await usersRepository.saveResetToken(user.id, token, expiresAt);
+
+  const resetUrl = `${config.frontendUrl}/reset-password?token=${token}`;
+  await notificationService.sendPasswordResetEmail(user.email, resetUrl);
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<boolean> {
+  const user = await usersRepository.findByResetToken(token);
+  if (!user) return false;
+
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await usersRepository.updatePassword(user.id, passwordHash);
+  return true;
 }

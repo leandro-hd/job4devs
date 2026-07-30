@@ -45,3 +45,20 @@ export async function me(req: AuthenticatedRequest, res: Response): Promise<void
 
   res.json({ user });
 }
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const { email } = req.body as { email: string };
+  await authService.requestPasswordReset(email);
+  // Always 200 — don't reveal whether the email is registered.
+  res.json({ message: 'If this email is registered, a reset link has been sent.' });
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const { token, password } = req.body as { token: string; password: string };
+  const ok = await authService.resetPassword(token, password);
+  if (!ok) {
+    res.status(400).json({ error: 'Invalid or expired reset token' });
+    return;
+  }
+  res.json({ message: 'Password updated successfully' });
+}
