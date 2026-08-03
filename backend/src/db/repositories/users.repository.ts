@@ -72,6 +72,10 @@ export async function findAllActive(): Promise<User[]> {
   return result.rows.map(mapRow);
 }
 
+export async function deactivateUser(userId: number): Promise<void> {
+  await pool.query(`UPDATE users SET active = false WHERE id = $1`, [userId]);
+}
+
 export async function saveResetToken(userId: number, token: string, expiresAt: Date): Promise<void> {
   await pool.query(
     `UPDATE users SET reset_token = $1, reset_token_expires_at = $2 WHERE id = $3`,

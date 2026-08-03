@@ -36,7 +36,7 @@ function buildJobRow(job: AlertJob): string {
     </tr>`;
 }
 
-function buildEmailTemplate(jobs: AlertJob[]): string {
+function buildEmailTemplate(jobs: AlertJob[], unsubscribeUrl: string): string {
   const rows = jobs.map(buildJobRow).join('');
 
   return `<!doctype html>
@@ -62,7 +62,7 @@ function buildEmailTemplate(jobs: AlertJob[]): string {
             <tr>
               <td style="padding:8px 32px 32px;">
                 <p style="margin:16px 0 0;border-top:1px solid #e5e7eb;padding-top:16px;font-size:12px;color:#9ca3af;">
-                  Você está recebendo este e-mail porque configurou palavras-chave no job4devs. Para ajustar ou parar os alertas, acesse as configurações da sua conta.
+                  Você está recebendo este e-mail porque configurou palavras-chave no job4devs. Para ajustar os alertas, acesse as configurações da sua conta. <a href="${unsubscribeUrl}" style="color:#9ca3af;">Cancelar inscrição</a>
                 </p>
               </td>
             </tr>
@@ -116,13 +116,13 @@ export async function sendPasswordResetEmail(recipientEmail: string, resetUrl: s
 
 // One email per user per cycle — batch jobs into a single message.
 // Do NOT send one email per job.
-export async function sendAlert(recipientEmail: string, jobs: AlertJob[]): Promise<void> {
+export async function sendAlert(recipientEmail: string, jobs: AlertJob[], unsubscribeUrl: string): Promise<void> {
   try {
     const { error } = await resend.emails.send({
       from: config.emailFrom,
       to: recipientEmail,
       subject: `🔔 ${jobs.length} nova${jobs.length === 1 ? '' : 's'} vaga${jobs.length === 1 ? '' : 's'} encontrada${jobs.length === 1 ? '' : 's'} — job4devs`,
-      html: buildEmailTemplate(jobs),
+      html: buildEmailTemplate(jobs, unsubscribeUrl),
     });
 
     if (error) {

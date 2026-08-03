@@ -7,6 +7,8 @@ import * as notificationsRepository from '../../db/repositories/notifications.re
 import * as logsRepository from '../../db/repositories/logs.repository';
 import * as filterService from '../../services/filter.service';
 import * as notificationService from '../../services/notification.service';
+import * as authService from '../../services/auth.service';
+import { config } from '../../config';
 import { logger } from '../../lib/logger';
 
 const SOURCE_NAME = '99freelas';
@@ -79,7 +81,9 @@ export async function runScrapeJob(): Promise<void> {
         }
 
         try {
-          await notificationService.sendAlert(first.recipient, pending);
+          const unsubscribeToken = authService.generateUnsubscribeToken(user.id);
+          const unsubscribeUrl = `${config.apiUrl}/api/auth/unsubscribe?token=${unsubscribeToken}`;
+          await notificationService.sendAlert(first.recipient, pending, unsubscribeUrl);
           await notificationsRepository.markSent(pending.map((p) => p.id));
           jobsNotified += pending.length;
         } catch (err) {

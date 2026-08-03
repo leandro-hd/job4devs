@@ -71,6 +71,20 @@ export async function getUserById(id: number): Promise<PublicUser | null> {
   return user ? toPublicUser(user) : null;
 }
 
+export function generateUnsubscribeToken(userId: number): string {
+  return jwt.sign({ userId, purpose: 'unsubscribe' }, config.jwtSecret);
+}
+
+export function verifyUnsubscribeToken(token: string): number | null {
+  try {
+    const payload = jwt.verify(token, config.jwtSecret) as { userId: number; purpose: string };
+    if (payload.purpose !== 'unsubscribe') return null;
+    return payload.userId;
+  } catch {
+    return null;
+  }
+}
+
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export async function requestPasswordReset(email: string): Promise<void> {
