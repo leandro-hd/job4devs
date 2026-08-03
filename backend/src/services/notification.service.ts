@@ -76,7 +76,7 @@ function buildEmailTemplate(jobs: AlertJob[]): string {
 
 export async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
   const { error } = await resend.emails.send({
-    from: config.emailFrom,
+    from: config.emailTransactionalFrom,
     to: recipientEmail,
     subject: 'Redefinição de senha — job4devs',
     html: `<!doctype html>

@@ -10,6 +10,7 @@ interface Config {
   jwtExpiresIn: string;
   resendApiKey: string;
   emailFrom: string;
+  emailTransactionalFrom: string;
   frontendUrl: string;
   apiUrl: string;
   defaultCronIntervalMinutes: number;
@@ -31,6 +32,7 @@ export const config: Config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   resendApiKey: required('RESEND_API_KEY'),
   emailFrom: process.env.EMAIL_FROM ?? 'job4devs <alerts@job4devs.dev>',
+  emailTransactionalFrom: process.env.EMAIL_TRANSACTIONAL_FROM ?? 'job4devs <noreply@job4devs.dev>',
   frontendUrl: process.env.FRONTEND_URL ?? '',
   apiUrl: process.env.API_URL ?? '',
   defaultCronIntervalMinutes: Number(process.env.DEFAULT_CRON_INTERVAL_MINUTES ?? 5),
