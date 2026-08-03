@@ -37,7 +37,7 @@ async function runMigration(fileName: string): Promise<void> {
   }
 }
 
-async function migrate(): Promise<void> {
+export async function runMigrations(): Promise<void> {
   await ensureMigrationsTable();
   const applied = await getAppliedMigrations();
 
@@ -53,11 +53,14 @@ async function migrate(): Promise<void> {
     }
     await runMigration(file);
   }
-
-  await pool.end();
 }
 
-migrate().catch((err) => {
-  console.error('[migrate] Failed:', err);
-  process.exit(1);
-});
+// Standalone script entry point
+if (process.argv[1]?.endsWith('migrate.ts') || process.argv[1]?.endsWith('migrate.js')) {
+  runMigrations()
+    .then(() => pool.end())
+    .catch((err) => {
+      console.error('[migrate] Failed:', err);
+      process.exit(1);
+    });
+}
