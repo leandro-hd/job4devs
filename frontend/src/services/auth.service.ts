@@ -4,6 +4,7 @@ export interface AuthUser {
   id: number;
   email: string;
   name: string;
+  active: boolean;
 }
 
 export interface AuthResponse {
@@ -23,6 +24,16 @@ export async function register(params: {
 export async function login(params: { email: string; password: string }): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/api/auth/login', params);
   return data;
+}
+
+export async function me(): Promise<AuthUser> {
+  const { data } = await api.get<{ user: AuthUser }>('/api/auth/me');
+  return data.user;
+}
+
+export async function reactivate(): Promise<AuthUser> {
+  const { data } = await api.post<{ user: AuthUser }>('/api/auth/reactivate');
+  return data.user;
 }
 
 export async function forgotPassword(email: string): Promise<void> {

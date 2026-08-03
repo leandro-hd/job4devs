@@ -47,6 +47,16 @@ export async function me(req: AuthenticatedRequest, res: Response): Promise<void
   res.json({ user });
 }
 
+export async function reactivate(req: AuthenticatedRequest, res: Response): Promise<void> {
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  await authService.reactivateUser(req.userId);
+  const user = await authService.getUserById(req.userId);
+  res.json({ user });
+}
+
 export async function forgotPassword(req: Request, res: Response): Promise<void> {
   const { email } = req.body as { email: string };
   await authService.requestPasswordReset(email);

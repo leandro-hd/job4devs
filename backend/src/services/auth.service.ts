@@ -11,6 +11,7 @@ export interface PublicUser {
   id: number;
   email: string;
   name: string;
+  active: boolean;
 }
 
 export interface JwtPayload {
@@ -18,7 +19,7 @@ export interface JwtPayload {
 }
 
 function toPublicUser(user: usersRepository.User): PublicUser {
-  return { id: user.id, email: user.email, name: user.name };
+  return { id: user.id, email: user.email, name: user.name, active: user.active };
 }
 
 export function signToken(payload: JwtPayload): string {
@@ -69,6 +70,10 @@ export async function loginUser(params: {
 export async function getUserById(id: number): Promise<PublicUser | null> {
   const user = await usersRepository.findById(id);
   return user ? toPublicUser(user) : null;
+}
+
+export async function reactivateUser(userId: number): Promise<void> {
+  await usersRepository.reactivateUser(userId);
 }
 
 export function generateUnsubscribeToken(userId: number): string {

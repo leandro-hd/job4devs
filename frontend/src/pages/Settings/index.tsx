@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSettings, type Settings as SettingsData } from '../../hooks/useSettings';
+import { useAuth } from '../../hooks/useAuth';
+import * as authService from '../../services/auth.service';
 
 interface SettingsFormProps {
   initial: SettingsData;
@@ -74,6 +76,18 @@ function SettingsForm({ initial, saving, error, save }: SettingsFormProps) {
 
 export function Settings() {
   const { settings, loading, saving, error, save } = useSettings();
+  const { user, refreshUser } = useAuth();
+  const [reactivating, setReactivating] = useState(false);
+
+  async function handleReactivate(): Promise<void> {
+    setReactivating(true);
+    try {
+      await authService.reactivate();
+      await refreshUser();
+    } finally {
+      setReactivating(false);
+    }
+  }
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -82,6 +96,14 @@ export function Settings() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Configurações</h1>
+      {user?.active === false && (
+        <div className="flex items-center justify-between rounded-md border border-yellow-400 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-600 dark:bg-yellow-950 dark:text-yellow-200">
+          <span>Seus alertas estão desativados. Você não receberá novas notificações.</span>
+          <Button variant="outline" size="sm" onClick={handleReactivate} disabled={reactivating} className="ml-4 shrink-0">
+            {reactivating ? 'Reativando...' : 'Reativar alertas'}
+          </Button>
+        </div>
+      )}
       <SettingsForm initial={settings} saving={saving} error={error} save={save} />
     </div>
   );
