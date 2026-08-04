@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { config } from '../../../config';
 
 const BASE_URL = 'https://www.99freelas.com.br';
 
@@ -101,4 +102,44 @@ export async function fetchPage(page: number): Promise<ScrapedJob[]> {
   });
 
   return jobs;
+}
+
+export interface JobDetail {
+  avgProposalValue: number | null;
+  avgDurationDays: number | null;
+}
+
+export async function fetchJobDetail(jobUrl: string): Promise<JobDetail> {
+  if (!config.freelas99AuthId || !config.freelas99AuthToken) {
+    return { avgProposalValue: null, avgDurationDays: null };
+  }
+
+  const bidUrl = jobUrl.replace('/project/', '/project/bid/');
+  const cookieHeader = `kmlicin=${config.freelas99AuthId}; kmlicn=${config.freelas99AuthToken}`;
+
+  const response = await axios.get<string>(bidUrl, {
+    headers: { ...HEADERS, Cookie: cookieHeader },
+    timeout: 10000,
+    maxRedirects: 0,
+    validateStatus: (status) => status === 200,
+  });
+
+  const $ = cheerio.load(response.data);
+  const text = $('div.generic.information').text();
+
+  return {
+    avgProposalValue: parseAvgProposalValue(text),
+    avgDurationDays: parseAvgDurationDays(text),
+  };
+}
+
+function parseAvgProposalValue(text: string): number | null {
+  const match = text.match(/Valor\s+m[eé]dio\s+das\s+propostas:\s*R\$[\s ]*([\d.,]+)/i);
+  if (!match?.[1]) return null;
+  return Number(match[1].replace(/\./g, '').replace(',', '.'));
+}
+
+function parseAvgDurationDays(text: string): number | null {
+  const match = text.match(/Dura[cç][aã]o\s+m[eé]dia\s+estimada:\s*(\d+)/i);
+  return match?.[1] ? Number(match[1]) : null;
 }

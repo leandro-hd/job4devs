@@ -43,6 +43,8 @@ export interface PendingNotification {
   publishedAt: Date | null;
   proposalCount: number | null;
   interestedCount: number | null;
+  avgProposalValue: number | null;
+  avgDurationDays: number | null;
 }
 
 interface PendingNotificationRow {
@@ -53,11 +55,14 @@ interface PendingNotificationRow {
   published_at: Date | null;
   proposal_count: number | null;
   interested_count: number | null;
+  avg_proposal_value: string | null;
+  avg_duration_days: number | null;
 }
 
 export async function findPendingForUser(userId: number): Promise<PendingNotification[]> {
   const result = await pool.query<PendingNotificationRow>(
-    `SELECT n.id, n.recipient, j.title, j.url, j.published_at, j.proposal_count, j.interested_count
+    `SELECT n.id, n.recipient, j.title, j.url, j.published_at,
+            j.proposal_count, j.interested_count, j.avg_proposal_value, j.avg_duration_days
      FROM notifications n
      JOIN jobs j ON j.id = n.job_id
      WHERE n.user_id = $1
@@ -72,6 +77,8 @@ export async function findPendingForUser(userId: number): Promise<PendingNotific
     publishedAt: row.published_at,
     proposalCount: row.proposal_count,
     interestedCount: row.interested_count,
+    avgProposalValue: row.avg_proposal_value !== null ? Number(row.avg_proposal_value) : null,
+    avgDurationDays: row.avg_duration_days,
   }));
 }
 

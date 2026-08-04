@@ -14,6 +14,8 @@ interface Config {
   frontendUrl: string;
   apiUrl: string;
   defaultCronIntervalMinutes: number;
+  freelas99AuthId: string | null;
+  freelas99AuthToken: string | null;
 }
 
 function required(name: string): string {
@@ -36,4 +38,6 @@ export const config: Config = {
   frontendUrl: process.env.FRONTEND_URL ?? '',
   apiUrl: process.env.API_URL ?? '',
   defaultCronIntervalMinutes: Number(process.env.DEFAULT_CRON_INTERVAL_MINUTES ?? 5),
+  freelas99AuthId: process.env.FREELAS99_AUTH_ID ?? null,
+  freelas99AuthToken: process.env.FREELAS99_AUTH_TOKEN ?? null,
 };

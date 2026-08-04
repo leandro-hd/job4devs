@@ -35,6 +35,8 @@ export interface Job {
   publishedAt: Date | null;
   proposalCount: number | null;
   interestedCount: number | null;
+  avgProposalValue: number | null;
+  avgDurationDays: number | null;
 }
 
 interface JobRow {
@@ -54,6 +56,8 @@ interface JobRow {
   published_at: Date | null;
   proposal_count: number | null;
   interested_count: number | null;
+  avg_proposal_value: string | null;
+  avg_duration_days: number | null;
 }
 
 function mapRow(row: JobRow): Job {
@@ -74,20 +78,27 @@ function mapRow(row: JobRow): Job {
     publishedAt: row.published_at,
     proposalCount: row.proposal_count,
     interestedCount: row.interested_count,
+    avgProposalValue: row.avg_proposal_value !== null ? Number(row.avg_proposal_value) : null,
+    avgDurationDays: row.avg_duration_days,
   };
 }
 
-export async function insertMany(jobs: NewJob[]): Promise<number> {
+export interface InsertedJob {
+  id: number;
+  url: string;
+}
+
+export async function insertMany(jobs: NewJob[]): Promise<InsertedJob[]> {
   if (jobs.length === 0) {
-    return 0;
+    return [];
   }
 
   const client = await pool.connect();
-  let insertedCount = 0;
+  const inserted: InsertedJob[] = [];
   try {
     await client.query('BEGIN');
     for (const job of jobs) {
-      const result = await client.query(
+      const result = await client.query<{ id: number; url: string }>(
         `INSERT INTO jobs (
            source_id, external_id, title, url, description,
            budget_min, budget_max, budget_type,
@@ -95,7 +106,8 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
            proposal_count, interested_count
          )
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-         ON CONFLICT (source_id, external_id) DO NOTHING`,
+         ON CONFLICT (source_id, external_id) DO NOTHING
+         RETURNING id, url`,
         [
           job.sourceId,
           job.externalId,
@@ -114,7 +126,9 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
           job.interestedCount,
         ]
       );
-      insertedCount += result.rowCount ?? 0;
+      if (result.rows[0]) {
+        inserted.push(result.rows[0]);
+      }
     }
     await client.query('COMMIT');
   } catch (err) {
@@ -124,7 +138,18 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
     client.release();
   }
 
-  return insertedCount;
+  return inserted;
+}
+
+export async function updateJobDetail(
+  id: number,
+  avgProposalValue: number | null,
+  avgDurationDays: number | null
+): Promise<void> {
+  await pool.query(
+    `UPDATE jobs SET avg_proposal_value = $2, avg_duration_days = $3 WHERE id = $1`,
+    [id, avgProposalValue, avgDurationDays]
+  );
 }
 
 export async function countAll(): Promise<number> {
@@ -159,6 +184,7 @@ export async function findPaginated(
               j.budget_min, j.budget_max, j.budget_type,
               j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at,
               j.proposal_count, j.interested_count,
+              j.avg_proposal_value, j.avg_duration_days,
               s.name AS source_name
        FROM jobs j
        JOIN sources s ON s.id = j.source_id
@@ -180,7 +206,8 @@ export async function findUnnotifiedForUser(userId: number): Promise<Job[]> {
     `SELECT j.id, j.source_id, j.external_id, j.title, j.url, j.description,
             j.budget_min, j.budget_max, j.budget_type,
             j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at,
-            j.proposal_count, j.interested_count
+            j.proposal_count, j.interested_count,
+            j.avg_proposal_value, j.avg_duration_days
      FROM jobs j
      WHERE j.scraped_at > NOW() - INTERVAL '1 hour'
        AND NOT EXISTS (

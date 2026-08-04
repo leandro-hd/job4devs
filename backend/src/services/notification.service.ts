@@ -13,6 +13,8 @@ export interface AlertJob {
   publishedAt: Date | null;
   proposalCount: number | null;
   interestedCount: number | null;
+  avgProposalValue: number | null;
+  avgDurationDays: number | null;
 }
 
 function escapeHtml(value: string): string {
@@ -27,6 +29,8 @@ function buildJobRow(job: AlertJob): string {
   if (date) metaParts.push(date);
   if (job.proposalCount !== null) metaParts.push(`${job.proposalCount} proposta${job.proposalCount === 1 ? '' : 's'}`);
   if (job.interestedCount !== null) metaParts.push(`${job.interestedCount} interessado${job.interestedCount === 1 ? '' : 's'}`);
+  if (job.avgProposalValue !== null) metaParts.push(`Média R$ ${job.avgProposalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+  if (job.avgDurationDays !== null) metaParts.push(`${job.avgDurationDays} dia${job.avgDurationDays === 1 ? '' : 's'}`);
   const meta = metaParts.length > 0 ? `<p style="margin:6px 0 0;font-size:13px;color:#6b7280;">${metaParts.join(' · ')}</p>` : '';
 
   return `

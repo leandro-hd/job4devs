@@ -44,12 +44,22 @@ export async function scrapeAndStore(): Promise<ScrapeSummary> {
     }
 
     jobsFound += jobs.length;
-    const inserted = await jobsRepository.insertMany(
+    const insertedJobs = await jobsRepository.insertMany(
       jobs.map((job) => ({ ...job, sourceId: source.id }))
     );
-    jobsNew += inserted;
+    jobsNew += insertedJobs.length;
 
-    if (inserted === 0) {
+    for (const inserted of insertedJobs) {
+      try {
+        const detail = await freelas99Scraper.fetchJobDetail(inserted.url);
+        await jobsRepository.updateJobDetail(inserted.id, detail.avgProposalValue, detail.avgDurationDays);
+      } catch (err) {
+        logger.warn({ err, jobId: inserted.id }, 'Failed to fetch job detail — skipping');
+      }
+      await delay(MIN_DELAY_MS + Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS));
+    }
+
+    if (insertedJobs.length === 0) {
       break;
     }
 
