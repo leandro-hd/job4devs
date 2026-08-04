@@ -30,12 +30,20 @@ const forgotPasswordLimiter = rateLimit({
   message: { error: 'Muitas tentativas. Tente novamente em 1 hora.' },
 });
 
+const resetPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Muitas tentativas. Tente novamente em 1 hora.' },
+});
+
 router.post('/register', registerLimiter, validateRegister, register);
 router.post('/login', loginLimiter, validateLogin, login);
 router.get('/me', authMiddleware, me);
 router.post('/reactivate', authMiddleware, reactivate);
 router.post('/forgot-password', forgotPasswordLimiter, validateForgotPassword, forgotPassword);
-router.post('/reset-password', validateResetPassword, resetPassword);
+router.post('/reset-password', resetPasswordLimiter, validateResetPassword, resetPassword);
 router.get('/unsubscribe', unsubscribe);
 
 export default router;
