@@ -217,50 +217,7 @@ de segurança mínima. Sem testes, um bug no scraper de Workana pode quebrar o 9
 
 ---
 
-### Etapa 6 — Segunda Fonte: Workana
-
-**Por que:** remove o single point of failure. Se o 99freelas bloquear ou mudar layout,
-o sistema continua funcionando com Workana.
-
-**Por que Workana e não Upwork:** Upwork usa Cloudflare com Turnstile em todas as rotas —
-scraping programático é inviável sem proxy residencial pago. Workana é server-rendered,
-sem bot protection relevante, e tem boa cobertura de vagas para devs brasileiros.
-
-**O que muda:**
-
-*Investigação prévia (antes de escrever código):* verificar que seletores CSS do Workana
-retornam os campos necessários: `externalId`, `title`, `url`, `description`, `budget*`,
-`publishedAt`, `rawTags`. Documentar aqui o resultado.
-
-*Backend:*
-- `workana.scraper.ts` (novo) — implementa `fetchPage(page)` e `fetchJobDetail(url)`
-  com a interface `ScrapedJob` / `JobDetail` já existente
-- Migration `013_seed_workana.sql`:
-  ```sql
-  INSERT INTO sources (name, base_url) VALUES
-      ('workana', 'https://www.workana.com');
-  ```
-- `scraper.service.ts`: tornar multi-source — receber `sourceName` como parâmetro em vez
-  de hardcodar `'99freelas'`; chamar o scraper correto baseado no nome
-- `scrape.job.ts`: iterar sobre todos os sources ativos no DB em vez de hardcodar
-  `SOURCE_NAME = '99freelas'`
-
-**Arquivos tocados:**
-- `backend/src/services/scraper/sources/workana.scraper.ts` (novo)
-- `backend/src/services/scraper/scraper.service.ts` (generalizar para múltiplas fontes)
-- `backend/src/worker/jobs/scrape.job.ts` (loop por sources ativos)
-- `backend/src/db/migrations/013_seed_workana.sql` (novo)
-
-**Gotchas:**
-- O loop de sources em `scrape.job.ts` hoje tem `isRunning` guard e um único log entry.
-  Com múltiplas fontes, cada source deve ter seu próprio log entry em `alert_logs`
-  (já é assim — `alert_logs.source_id` aponta para a source específica).
-- `findUnnotifiedForUser` não filtra por source — retorna todos os jobs novos
-  independente da fonte. Isso é correto e não precisa mudar.
-
----
-
-### Etapa 7 — Filtros Adicionais na UI
+### Etapa 6 — Filtros Adicionais na UI
 
 **Por que:** os dados já estão no DB (`budget_min`, `budget_max`, `client_rating` em
 `jobs`), e o campo `min_budget` já existe em `user_settings`. Falta expor controle de
@@ -290,20 +247,18 @@ orçamento máximo, rating mínimo do cliente, e aplicar os filtros no `filter.s
 ## Ordem de execução e dependências
 
 ```
-Etapa 1 (Rate Limiting)     → independente, começar aqui
+Etapa 1 (Rate Limiting)      → independente, começar aqui
 Etapa 2 (Email Verification) → independente
-Etapa 3 (Refresh Tokens)    → independente
-Etapa 4 (Cookie Detection)  → independente
-Etapa 5 (Testes)            → deve preceder Etapa 6
-Etapa 6 (Workana)           → depende de Etapa 5
-Etapa 7 (Filtros)           → independente, pode ser feita a qualquer momento
+Etapa 3 (Refresh Tokens)     → independente
+Etapa 4 (Cookie Detection)   → independente
+Etapa 5 (Testes)             → independente
+Etapa 6 (Filtros)            → independente, pode ser feita a qualquer momento
 ```
 
-Etapas 1–4 podem ser feitas em qualquer ordem entre si. A única dependência obrigatória
-é Etapa 5 antes da Etapa 6.
+Todas as etapas são independentes entre si.
 
 **Sugestão de sequência:**
-1 → 2 → 3 → 4 → 5 → 6 → 7
+1 → 2 → 3 → 4 → 5 → 6
 
 ---
 
@@ -311,7 +266,7 @@ Etapas 1–4 podem ser feitas em qualquer ordem entre si. A única dependência 
 
 | Feature | Motivo |
 |---|---|
-| Upwork | Cloudflare Turnstile em todas as rotas — inviável sem proxy residencial pago |
+| Segunda fonte de scraping | Upwork: Cloudflare bloqueia todas as rotas (410/403), RSS descontinuado, API oficial requer aprovação de parceiro. Outras plataformas (Workana, Freelancer.com) ficam para Fase 4 |
 | Telegram / Slack | Volume de usuários ainda não justifica |
 | Admin panel | Usuário único por enquanto |
 | NLP / relevance scoring | Overkill para o tamanho atual da base |
@@ -327,6 +282,4 @@ Etapas 1–4 podem ser feitas em qualquer ordem entre si. A única dependência 
 - [ ] Dashboard mostra banner quando cookies do 99freelas expiram
 - [ ] Admin recebe e-mail de alerta quando cookies expiram
 - [ ] Suite de testes passando no CI (`npm test` verde no GitHub Actions)
-- [ ] Workana scraper retornando vagas reais em produção
-- [ ] `alert_logs` mostrando entradas para ambas as fontes (99freelas + Workana)
 - [ ] Filtros de budget e rating funcionando no feed
