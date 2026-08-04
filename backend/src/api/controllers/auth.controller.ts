@@ -74,6 +74,34 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
   res.json({ message: 'Password updated successfully' });
 }
 
+export async function verifyEmail(req: Request, res: Response): Promise<void> {
+  const { token } = req.body as { token: string };
+  const ok = await authService.verifyEmailToken(token);
+  if (!ok) {
+    res.status(400).json({ error: 'Invalid or already used verification token' });
+    return;
+  }
+  res.json({ message: 'Email verified successfully' });
+}
+
+export async function resendVerification(req: AuthenticatedRequest, res: Response): Promise<void> {
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  const user = await authService.getUserById(req.userId);
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  if (user.emailVerified) {
+    res.status(400).json({ error: 'Email is already verified' });
+    return;
+  }
+  await authService.sendVerificationEmail(user.id, user.email);
+  res.json({ message: 'Verification email sent' });
+}
+
 export async function unsubscribe(req: Request, res: Response): Promise<void> {
   const token = req.query['token'];
   const userId = typeof token === 'string' ? authService.verifyUnsubscribeToken(token) : null;

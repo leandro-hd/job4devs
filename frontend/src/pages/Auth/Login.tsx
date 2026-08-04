@@ -13,6 +13,7 @@ export function Login() {
   const [searchParams] = useSearchParams();
   const justRegistered = searchParams.get('registered') === 'true';
   const justReset = searchParams.get('reset') === 'true';
+  const justVerified = searchParams.get('verified') === 'true';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +43,11 @@ export function Login() {
           {justRegistered && (
             <p className="mb-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
               Conta criada com sucesso! Faça login para continuar.
+            </p>
+          )}
+          {justVerified && (
+            <p className="mb-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+              E-mail confirmado! Agora é só fazer login.
             </p>
           )}
           {justReset && (

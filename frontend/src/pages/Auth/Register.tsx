@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,12 +9,12 @@ import { useAuth } from '../../hooks/useAuth';
 
 export function Register() {
   const { register } = useAuth();
-  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   async function handleSubmit(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -22,12 +22,33 @@ export function Register() {
     setLoading(true);
     try {
       await register(email, password, name);
-      navigate('/login?registered=true');
+      setRegistered(true);
     } catch {
       setError('Não foi possível criar a conta. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
+  }
+
+  if (registered) {
+    return (
+      <AuthLayout>
+        <Card className="w-full border-t-4 border-t-cyan-500 shadow-lg">
+          <CardHeader>
+            <CardTitle>Verifique seu e-mail</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Enviamos um link de confirmação para <strong>{email}</strong>. Clique no link para
+              ativar sua conta antes de fazer login.
+            </p>
+            <Link to="/login" className="text-sm font-medium text-violet-600 hover:underline">
+              Ir para o login
+            </Link>
+          </CardContent>
+        </Card>
+      </AuthLayout>
+    );
   }
 
   return (

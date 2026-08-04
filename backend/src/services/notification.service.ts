@@ -86,6 +86,45 @@ function buildEmailTemplate(jobs: AlertJob[], unsubscribeUrl: string): string {
 </html>`;
 }
 
+export async function sendVerificationEmail(recipientEmail: string, verificationUrl: string): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: config.emailTransactionalFrom,
+    to: recipientEmail,
+    subject: 'Confirme seu e-mail — job4devs',
+    html: `<!doctype html>
+<html lang="pt-BR">
+  <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:24px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+            <tr>
+              <td style="background-color:#7c3aed;background-image:linear-gradient(135deg,#7c3aed,#06b6d4);padding:24px 32px;">
+                <span style="color:#ffffff;font-size:22px;font-weight:bold;">🔔 job4devs</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <p style="margin:0 0 16px;font-size:16px;color:#111827;">Bem-vindo ao job4devs! Clique no botão abaixo para confirmar seu e-mail e ativar sua conta.</p>
+                <a href="${verificationUrl}" style="display:inline-block;padding:12px 24px;background-color:#7c3aed;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:15px;">Confirmar e-mail</a>
+                <p style="margin:24px 0 0;border-top:1px solid #e5e7eb;padding-top:16px;font-size:12px;color:#9ca3af;">Se o botão não funcionar, copie e cole este link no seu navegador:<br>${verificationUrl}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  logger.info({ recipient: recipientEmail }, 'Verification email sent');
+}
+
 export async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
   const { error } = await resend.emails.send({
     from: config.emailTransactionalFrom,

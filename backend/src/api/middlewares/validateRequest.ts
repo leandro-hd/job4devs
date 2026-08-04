@@ -55,3 +55,12 @@ export function validateResetPassword(req: Request, res: Response, next: NextFun
   }
   next();
 }
+
+export function validateVerifyEmail(req: Request, res: Response, next: NextFunction): void {
+  const { token } = req.body as { token?: string };
+  if (!token) {
+    res.status(400).json({ error: 'Verification token is required' });
+    return;
+  }
+  next();
+}

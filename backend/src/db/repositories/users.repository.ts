@@ -6,6 +6,7 @@ export interface User {
   passwordHash: string;
   name: string;
   active: boolean;
+  emailVerified: boolean;
   createdAt: Date;
 }
 
@@ -15,6 +16,7 @@ interface UserRow {
   password_hash: string;
   name: string;
   active: boolean;
+  email_verified: boolean;
   created_at: Date;
 }
 
@@ -25,9 +27,12 @@ function mapRow(row: UserRow): User {
     passwordHash: row.password_hash,
     name: row.name,
     active: row.active,
+    emailVerified: row.email_verified,
     createdAt: row.created_at,
   };
 }
+
+const COLS = `id, email, password_hash, name, active, email_verified, created_at`;
 
 export async function createUser(params: {
   email: string;
@@ -37,7 +42,7 @@ export async function createUser(params: {
   const result = await pool.query<UserRow>(
     `INSERT INTO users (email, password_hash, name)
      VALUES ($1, $2, $3)
-     RETURNING id, email, password_hash, name, active, created_at`,
+     RETURNING ${COLS}`,
     [params.email, params.passwordHash, params.name]
   );
   const row = result.rows[0];
@@ -49,25 +54,23 @@ export async function createUser(params: {
 
 export async function findByEmail(email: string): Promise<User | null> {
   const result = await pool.query<UserRow>(
-    `SELECT id, email, password_hash, name, active, created_at FROM users WHERE email = $1`,
+    `SELECT ${COLS} FROM users WHERE email = $1`,
     [email]
   );
-  const row = result.rows[0];
-  return row ? mapRow(row) : null;
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
 export async function findById(id: number): Promise<User | null> {
   const result = await pool.query<UserRow>(
-    `SELECT id, email, password_hash, name, active, created_at FROM users WHERE id = $1`,
+    `SELECT ${COLS} FROM users WHERE id = $1`,
     [id]
   );
-  const row = result.rows[0];
-  return row ? mapRow(row) : null;
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
 export async function findAllActive(): Promise<User[]> {
   const result = await pool.query<UserRow>(
-    `SELECT id, email, password_hash, name, active, created_at FROM users WHERE active = true`
+    `SELECT ${COLS} FROM users WHERE active = true AND email_verified = true`
   );
   return result.rows.map(mapRow);
 }
@@ -89,13 +92,32 @@ export async function saveResetToken(userId: number, token: string, expiresAt: D
 
 export async function findByResetToken(token: string): Promise<User | null> {
   const result = await pool.query<UserRow>(
-    `SELECT id, email, password_hash, name, active, created_at
-     FROM users
-     WHERE reset_token = $1 AND reset_token_expires_at > NOW()`,
+    `SELECT ${COLS} FROM users WHERE reset_token = $1 AND reset_token_expires_at > NOW()`,
     [token]
   );
-  const row = result.rows[0];
-  return row ? mapRow(row) : null;
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function saveVerificationToken(userId: number, token: string): Promise<void> {
+  await pool.query(
+    `UPDATE users SET verification_token = $1 WHERE id = $2`,
+    [token, userId]
+  );
+}
+
+export async function findByVerificationToken(token: string): Promise<User | null> {
+  const result = await pool.query<UserRow>(
+    `SELECT ${COLS} FROM users WHERE verification_token = $1`,
+    [token]
+  );
+  return result.rows[0] ? mapRow(result.rows[0]) : null;
+}
+
+export async function markEmailVerified(userId: number): Promise<void> {
+  await pool.query(
+    `UPDATE users SET email_verified = true, verification_token = NULL WHERE id = $1`,
+    [userId]
+  );
 }
 
 export async function updatePassword(userId: number, passwordHash: string): Promise<void> {

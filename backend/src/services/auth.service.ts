@@ -12,6 +12,7 @@ export interface PublicUser {
   email: string;
   name: string;
   active: boolean;
+  emailVerified: boolean;
 }
 
 export interface JwtPayload {
@@ -19,7 +20,7 @@ export interface JwtPayload {
 }
 
 function toPublicUser(user: usersRepository.User): PublicUser {
-  return { id: user.id, email: user.email, name: user.name, active: user.active };
+  return { id: user.id, email: user.email, name: user.name, active: user.active, emailVerified: user.emailVerified };
 }
 
 export function signToken(payload: JwtPayload): string {
@@ -47,7 +48,23 @@ export async function registerUser(params: {
     name: params.name,
   });
 
+  await sendVerificationEmail(user.id, user.email);
+
   return { user: toPublicUser(user), token: signToken({ userId: user.id }) };
+}
+
+export async function sendVerificationEmail(userId: number, email: string): Promise<void> {
+  const token = randomBytes(32).toString('hex');
+  await usersRepository.saveVerificationToken(userId, token);
+  const verificationUrl = `${config.frontendUrl}/verify-email?token=${token}`;
+  await notificationService.sendVerificationEmail(email, verificationUrl);
+}
+
+export async function verifyEmailToken(token: string): Promise<boolean> {
+  const user = await usersRepository.findByVerificationToken(token);
+  if (!user) return false;
+  await usersRepository.markEmailVerified(user.id);
+  return true;
 }
 
 export async function loginUser(params: {
