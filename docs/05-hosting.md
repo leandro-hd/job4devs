@@ -26,7 +26,9 @@ flowchart LR
     DEV["💻 git push origin main"] --> GH["GitHub\nrepo privado"]
 
     GH -->|auto-deploy| VERCEL["Vercel\nFrontend"]
-    GH -->|auto-deploy| RAILWAY["Railway\nBackend + PostgreSQL"]
+    GH -->|"GitHub Actions CI\n(type-check + lint)"| CI["CI passa?"]
+    CI -->|sim| RAILWAY["Railway\nBackend + PostgreSQL"]
+    CI -->|não| BLOCKED["deploy bloqueado"]
 
     DOMAIN["job4devs.dev\n(Namecheap)"]
     DOMAIN -->|"A @"| VERCEL
@@ -73,7 +75,7 @@ adicionarmos `frontend/vercel.json`:
 
 ## Backend — Railway
 
-- Deploy automático via GitHub, Root Directory `backend`
+- Deploy via GitHub Actions CI (`type-check` + `lint` devem passar) → Railway
 - Build (`npm run build`) e start (`npm start`) detectados via Nixpacks a partir
   dos scripts do `package.json` — nenhum Dockerfile necessário
 - `PORT` é injetado dinamicamente pelo Railway; `config/index.ts` já lê
@@ -106,9 +108,15 @@ JWT_SECRET=<gerar um valor forte — não usar o de dev local>
 JWT_EXPIRES_IN=7d
 RESEND_API_KEY=<API key gerada no painel do Resend>
 EMAIL_FROM="job4devs <alerts@job4devs.dev>"
+EMAIL_TRANSACTIONAL_FROM="job4devs <noreply@job4devs.dev>"
 DEFAULT_CRON_INTERVAL_MINUTES=5
 FRONTEND_URL=<URL da Vercel — usada para restringir o CORS>
 API_URL=<URL pública deste próprio serviço>
+# 99freelas auth (optional — needed for avg_proposal_value and avg_duration_days)
+# Extract from browser DevTools → Application → Cookies → www.99freelas.com.br
+# kmlicin = user ID, kmlicn = remember-me token (valid ~1 month; update when expired)
+FREELAS99_AUTH_ID=
+FREELAS99_AUTH_TOKEN=
 ```
 
 ---

@@ -41,6 +41,8 @@ erDiagram
         varchar password_hash
         varchar name
         boolean active
+        text reset_token
+        timestamptz reset_token_expires_at
     }
 
     USER_SETTINGS {
@@ -60,6 +62,10 @@ erDiagram
         numeric budget_max
         numeric client_rating
         timestamptz published_at
+        int proposal_count
+        int interested_count
+        numeric avg_proposal_value
+        int avg_duration_days
     }
 
     NOTIFICATIONS {
@@ -108,18 +114,21 @@ CREATE TABLE sources (
 -- USERS
 -- ============================================================
 CREATE TABLE users (
-    id              SERIAL PRIMARY KEY,
-    email           VARCHAR(255)  NOT NULL UNIQUE,
-    password_hash   VARCHAR(255)  NOT NULL,
-    name            VARCHAR(255)  NOT NULL,
-    active          BOOLEAN       NOT NULL DEFAULT true,
-    created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+    id                      SERIAL PRIMARY KEY,
+    email                   VARCHAR(255)  NOT NULL UNIQUE,
+    password_hash           VARCHAR(255)  NOT NULL,
+    name                    VARCHAR(255)  NOT NULL,
+    active                  BOOLEAN       NOT NULL DEFAULT true,
+    created_at              TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    -- Password reset (migration 008)
+    reset_token             TEXT,
+    reset_token_expires_at  TIMESTAMPTZ
 );
 
 -- ============================================================
 -- USER_SETTINGS
 -- Key/value store scoped per user.
--- Keys used in MVP: keywords, min_budget, notification_email
+-- Keys used: keywords, exclude_keywords, min_budget, notification_email
 -- cron_interval_minutes is NOT a per-user setting — there is a single global
 -- node-cron schedule, read from DEFAULT_CRON_INTERVAL_MINUTES (.env).
 -- ============================================================
@@ -156,6 +165,12 @@ CREATE TABLE jobs (
     published_at    TIMESTAMPTZ,
     scraped_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    -- Fetched from public detail page per new job (migration 009)
+    proposal_count  INTEGER,
+    interested_count INTEGER,
+    -- Fetched from authenticated bid page per new job (migration 010)
+    avg_proposal_value NUMERIC(12,2),
+    avg_duration_days  INTEGER,
 
     CONSTRAINT uq_jobs_source_external UNIQUE (source_id, external_id),
     CONSTRAINT chk_budget_range CHECK (
@@ -288,7 +303,9 @@ WHERE j.scraped_at > NOW() - INTERVAL '1 hour'
 
 ### Find pending notifications for a user
 ```sql
-SELECT n.*, j.title, j.url, j.budget_min, j.budget_max, j.published_at
+SELECT n.*, j.title, j.url, j.budget_min, j.budget_max, j.published_at,
+       j.proposal_count, j.interested_count,
+       j.avg_proposal_value, j.avg_duration_days
 FROM notifications n
 JOIN jobs j ON j.id = n.job_id
 WHERE n.user_id = $1

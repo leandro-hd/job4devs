@@ -62,8 +62,8 @@ flowchart TB
     API --> DB
     WORKER --> DB
     WORKER -->|scraping periódico| FREELAS
-    WORKER -->|e-mail de alerta| SMTP
-    SMTP -.->|entrega| User
+    WORKER -->|e-mail de alerta via HTTPS| RESEND["Resend API"]
+    RESEND -.->|entrega| User
 ```
 
 > Imagem renderizada: [`docs/diagrams/architecture.png`](diagrams/architecture.png)
@@ -97,11 +97,10 @@ backend/
 │   │   ├── scraper/
 │   │   │   ├── scraper.service.ts       # Orchestrates all sources
 │   │   │   └── sources/
-│   │   │       ├── freelas99.scraper.ts # 99freelas adapter
-│   │   │       └── upwork.scraper.ts    # Future: Upwork adapter (stub only)
+│   │   │       └── freelas99.scraper.ts # 99freelas adapter (listing + detail + bid pages)
+│   │   ├── auth.service.ts              # JWT, password hashing, unsubscribe tokens, password reset
 │   │   ├── filter.service.ts            # Keyword matching logic
-│   │   ├── notification.service.ts      # Email dispatch via Resend
-│   │   └── deduplication.service.ts     # Thin wrapper — delegates to DB
+│   │   └── notification.service.ts      # Email dispatch via Resend (alerts + transactional)
 │   │
 │   ├── worker/
 │   │   ├── scheduler.ts                 # Initializes node-cron, reads interval from DB
@@ -110,6 +109,7 @@ backend/
 │   │
 │   ├── db/
 │   │   ├── index.ts                     # pg Pool — single connection instance
+│   │   ├── migrate.ts                   # Migration runner (auto-executes on server startup)
 │   │   ├── migrations/
 │   │   │   ├── 001_create_sources.sql
 │   │   │   ├── 002_create_users.sql
@@ -117,7 +117,10 @@ backend/
 │   │   │   ├── 004_create_jobs.sql
 │   │   │   ├── 005_create_notifications.sql
 │   │   │   ├── 006_create_alert_logs.sql
-│   │   │   └── 007_seed.sql
+│   │   │   ├── 007_seed.sql
+│   │   │   ├── 008_add_password_reset_to_users.sql
+│   │   │   ├── 009_add_proposal_counts_to_jobs.sql
+│   │   │   └── 010_add_avg_proposal_to_jobs.sql
 │   │   └── repositories/
 │   │       ├── jobs.repository.ts
 │   │       ├── users.repository.ts
@@ -158,7 +161,9 @@ frontend/
 │   ├── pages/
 │   │   ├── Auth/
 │   │   │   ├── Login.tsx
-│   │   │   └── Register.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── ForgotPassword.tsx
+│   │   │   └── ResetPassword.tsx
 │   │   ├── Dashboard/
 │   │   │   └── index.tsx                # System status + summary metrics
 │   │   ├── Feed/

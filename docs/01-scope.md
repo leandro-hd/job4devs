@@ -15,20 +15,20 @@
 ## In Scope (MVP)
 
 ### Backend
-- [ ] Express API with JWT authentication (register, login)
-- [ ] 99freelas scraper (Axios + Cheerio, no browser headless)
-- [ ] node-cron scheduler with configurable interval (read from `user_settings`)
-- [ ] Per-user keyword filtering service
-- [ ] E-mail notification via Resend (HTTP API)
-- [ ] Deduplication enforced via DB constraints (`ON CONFLICT DO NOTHING`)
-- [ ] `alert_logs` written after every worker cycle
-- [ ] Failure detection: worker logs `status = 'failed'` and error message on exception
+- [x] Express API with JWT authentication (register, login)
+- [x] 99freelas scraper (Axios + Cheerio, no browser headless)
+- [x] node-cron scheduler with configurable interval (read from `user_settings`)
+- [x] Per-user keyword filtering service
+- [x] E-mail notification via Resend (HTTP API)
+- [x] Deduplication enforced via DB constraints (`ON CONFLICT DO NOTHING`)
+- [x] `alert_logs` written after every worker cycle
+- [x] Failure detection: worker logs `status = 'failed'` and error message on exception
 
 ### Frontend
-- [ ] Auth screens: register, login
-- [ ] Feed page: paginated list of collected jobs (title, source, budget, published date, link)
-- [ ] Dashboard: last cycle status, total jobs collected, total notifications sent
-- [ ] Settings page: manage keywords, minimum budget, notification email
+- [x] Auth screens: register, login
+- [x] Feed page: paginated list of collected jobs (title, source, budget, published date, link)
+- [x] Dashboard: last cycle status, total jobs collected, total notifications sent
+- [x] Settings page: manage keywords, minimum budget, notification email
 
 ### Database
 - Full schema as specified in `docs/03-database.md`
@@ -54,15 +54,25 @@
 
 ---
 
-## Explicitly Deferred (Post-MVP)
+## Phase 2 — Completed
 
-These features are **forbidden in the MVP**. Do not implement or scaffold them.
+| Feature | Notes |
+|---|---|
+| GitHub Actions CI + Railway deploy gate | type-check + lint must pass before deploy |
+| Exclude keywords | per-user; jobs matching excluded keywords are suppressed |
+| Password recovery | token in DB, 1h expiry, transactional email via Resend |
+| Separate transactional email sender | `noreply@job4devs.dev` for password reset, `alerts@job4devs.dev` for alerts |
+| Unsubscribe link in alert emails | JWT-signed token, no expiry, deactivates user account |
+| Account reactivation | Settings page banner + button when `active = false` |
+| 99freelas: `proposal_count` + `interested_count` | fetched from public detail page per new job |
+| 99freelas: `avg_proposal_value` + `avg_duration_days` | fetched from authenticated bid page per new job |
+
+## Explicitly Deferred (Post-Phase 2)
 
 | Feature | Phase |
 |---|---|
-| Upwork API integration | Phase 2 |
-| 99freelas scraping with authentication | Phase 2 |
-| Additional filters: client rating, budget range, location | Phase 2 |
+| Upwork integration | Phase 3 |
+| Additional filters: client rating, budget range, location | Phase 3 |
 | Telegram / Slack notifications | Phase 3 |
 | Job history search and advanced filtering in UI | Phase 3 |
 | NLP-based relevance scoring | Phase 4 |
