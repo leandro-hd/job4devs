@@ -14,6 +14,8 @@ export interface NewJob {
   location: string | null;
   rawTags: string[];
   publishedAt: Date | null;
+  proposalCount: number | null;
+  interestedCount: number | null;
 }
 
 export interface Job {
@@ -31,6 +33,8 @@ export interface Job {
   location: string | null;
   rawTags: string[];
   publishedAt: Date | null;
+  proposalCount: number | null;
+  interestedCount: number | null;
 }
 
 interface JobRow {
@@ -48,6 +52,8 @@ interface JobRow {
   location: string | null;
   raw_tags: string[] | null;
   published_at: Date | null;
+  proposal_count: number | null;
+  interested_count: number | null;
 }
 
 function mapRow(row: JobRow): Job {
@@ -66,6 +72,8 @@ function mapRow(row: JobRow): Job {
     location: row.location,
     rawTags: row.raw_tags ?? [],
     publishedAt: row.published_at,
+    proposalCount: row.proposal_count,
+    interestedCount: row.interested_count,
   };
 }
 
@@ -83,9 +91,10 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
         `INSERT INTO jobs (
            source_id, external_id, title, url, description,
            budget_min, budget_max, budget_type,
-           client_rating, client_reviews, location, raw_tags, published_at
+           client_rating, client_reviews, location, raw_tags, published_at,
+           proposal_count, interested_count
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          ON CONFLICT (source_id, external_id) DO NOTHING`,
         [
           job.sourceId,
@@ -101,6 +110,8 @@ export async function insertMany(jobs: NewJob[]): Promise<number> {
           job.location,
           job.rawTags,
           job.publishedAt,
+          job.proposalCount,
+          job.interestedCount,
         ]
       );
       insertedCount += result.rowCount ?? 0;
@@ -147,6 +158,7 @@ export async function findPaginated(
       `SELECT j.id, j.source_id, j.external_id, j.title, j.url, j.description,
               j.budget_min, j.budget_max, j.budget_type,
               j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at,
+              j.proposal_count, j.interested_count,
               s.name AS source_name
        FROM jobs j
        JOIN sources s ON s.id = j.source_id
@@ -167,7 +179,8 @@ export async function findUnnotifiedForUser(userId: number): Promise<Job[]> {
   const result = await pool.query<JobRow>(
     `SELECT j.id, j.source_id, j.external_id, j.title, j.url, j.description,
             j.budget_min, j.budget_max, j.budget_type,
-            j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at
+            j.client_rating, j.client_reviews, j.location, j.raw_tags, j.published_at,
+            j.proposal_count, j.interested_count
      FROM jobs j
      WHERE j.scraped_at > NOW() - INTERVAL '1 hour'
        AND NOT EXISTS (

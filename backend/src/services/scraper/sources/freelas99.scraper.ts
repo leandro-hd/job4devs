@@ -23,11 +23,19 @@ export interface ScrapedJob {
   location: string | null;
   rawTags: string[];
   publishedAt: Date | null;
+  proposalCount: number | null;
+  interestedCount: number | null;
 }
 
 function parseClientReviews(text: string): number {
   const match = text.match(/(\d+)/);
   return match?.[1] ? Number(match[1]) : 0;
+}
+
+function parseCount(text: string, label: string): number | null {
+  const regex = new RegExp(`${label}:\\s*<b>(\\d+)</b>`, 'i');
+  const match = text.match(regex);
+  return match?.[1] ? Number(match[1]) : null;
 }
 
 export async function fetchPage(page: number): Promise<ScrapedJob[]> {
@@ -70,6 +78,10 @@ export async function fetchPage(page: number): Promise<ScrapedJob[]> {
 
     const clientReviews = parseClientReviews(card.find('span.avaliacoes-text').text());
 
+    const infoHtml = card.find('p.item-text.information').html() ?? '';
+    const proposalCount = parseCount(infoHtml, 'Propostas');
+    const interestedCount = parseCount(infoHtml, 'Interessados');
+
     jobs.push({
       externalId,
       title,
@@ -83,6 +95,8 @@ export async function fetchPage(page: number): Promise<ScrapedJob[]> {
       location: null,
       rawTags,
       publishedAt,
+      proposalCount,
+      interestedCount,
     });
   });
 

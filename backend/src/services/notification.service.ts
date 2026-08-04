@@ -11,6 +11,8 @@ export interface AlertJob {
   jobTitle: string;
   jobUrl: string;
   publishedAt: Date | null;
+  proposalCount: number | null;
+  interestedCount: number | null;
 }
 
 function escapeHtml(value: string): string {
@@ -21,6 +23,12 @@ function buildJobRow(job: AlertJob): string {
   const title = escapeHtml(job.jobTitle);
   const date = job.publishedAt ? job.publishedAt.toLocaleDateString('pt-BR') : null;
 
+  const metaParts: string[] = [];
+  if (date) metaParts.push(date);
+  if (job.proposalCount !== null) metaParts.push(`${job.proposalCount} proposta${job.proposalCount === 1 ? '' : 's'}`);
+  if (job.interestedCount !== null) metaParts.push(`${job.interestedCount} interessado${job.interestedCount === 1 ? '' : 's'}`);
+  const meta = metaParts.length > 0 ? `<p style="margin:6px 0 0;font-size:13px;color:#6b7280;">${metaParts.join(' · ')}</p>` : '';
+
   return `
     <tr>
       <td style="padding:0 32px 16px;">
@@ -28,7 +36,7 @@ function buildJobRow(job: AlertJob): string {
           <tr>
             <td style="padding:16px;">
               <a href="${job.jobUrl}" style="font-size:15px;font-weight:bold;color:#111827;text-decoration:none;">${title}</a>
-              ${date ? `<p style="margin:6px 0 0;font-size:13px;color:#6b7280;">${date}</p>` : ''}
+              ${meta}
             </td>
           </tr>
         </table>
