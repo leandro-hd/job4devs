@@ -75,7 +75,7 @@ sequenceDiagram
     participant Scraper as ScraperService
     participant DB as PostgreSQL
     participant Filter as FilterService
-    participant Mail as NotificationService (SMTP)
+    participant Mail as NotificationService (Resend)
 
     Cron->>Scraper: dispara ciclo (a cada N min)
     Scraper->>Scraper: GET páginas da fonte (até MAX_PAGES)
@@ -111,11 +111,16 @@ JWT_EXPIRES_IN=7d
 # Email (Resend)
 RESEND_API_KEY=re_xxx
 EMAIL_FROM="job4devs <alerts@job4devs.dev>"
+EMAIL_TRANSACTIONAL_FROM="job4devs <noreply@job4devs.dev>"
 
 # Worker
 DEFAULT_CRON_INTERVAL_MINUTES=5
 
+# 99freelas auth (optional — needed for avg_proposal_value and avg_duration_days)
+FREELAS99_AUTH_ID=
+FREELAS99_AUTH_TOKEN=
+
 # URLs
-FRONTEND_URL=https://app.job4devs.com
-API_URL=https://api.job4devs.com
+FRONTEND_URL=https://job4devs.dev
+API_URL=https://api.job4devs.dev
 ```
