@@ -24,8 +24,13 @@ export interface ScrapedJob {
   location: string | null;
   rawTags: string[];
   publishedAt: Date | null;
+}
+
+export interface JobDetail {
   proposalCount: number | null;
   interestedCount: number | null;
+  avgProposalValue: number | null;
+  avgDurationDays: number | null;
 }
 
 function parseClientReviews(text: string): number {
@@ -33,9 +38,20 @@ function parseClientReviews(text: string): number {
   return match?.[1] ? Number(match[1]) : 0;
 }
 
-function parseCount(text: string, label: string): number | null {
-  const regex = new RegExp(`${label}:\\s*<b>(\\d+)</b>`, 'i');
-  const match = text.match(regex);
+function parseTableCount($: cheerio.CheerioAPI, label: string): number | null {
+  const th = $('th').filter((_, el) => $(el).text().trim().startsWith(label));
+  const value = th.next('td').text().trim();
+  return value ? Number(value) : null;
+}
+
+function parseAvgProposalValue(text: string): number | null {
+  const match = text.match(/Valor\s+m[eé]dio\s+das\s+propostas:\s*R\$[\s ]*([\d.,]+)/i);
+  if (!match?.[1]) return null;
+  return Number(match[1].replace(/\./g, '').replace(',', '.'));
+}
+
+function parseAvgDurationDays(text: string): number | null {
+  const match = text.match(/Dura[cç][aã]o\s+m[eé]dia\s+estimada:\s*(\d+)/i);
   return match?.[1] ? Number(match[1]) : null;
 }
 
@@ -79,10 +95,6 @@ export async function fetchPage(page: number): Promise<ScrapedJob[]> {
 
     const clientReviews = parseClientReviews(card.find('span.avaliacoes-text').text());
 
-    const infoHtml = card.find('p.item-text.information').html() ?? '';
-    const proposalCount = parseCount(infoHtml, 'Propostas');
-    const interestedCount = parseCount(infoHtml, 'Interessados');
-
     jobs.push({
       externalId,
       title,
@@ -96,50 +108,41 @@ export async function fetchPage(page: number): Promise<ScrapedJob[]> {
       location: null,
       rawTags,
       publishedAt,
-      proposalCount,
-      interestedCount,
     });
   });
 
   return jobs;
 }
 
-export interface JobDetail {
-  avgProposalValue: number | null;
-  avgDurationDays: number | null;
-}
-
 export async function fetchJobDetail(jobUrl: string): Promise<JobDetail> {
-  if (!config.freelas99AuthId || !config.freelas99AuthToken) {
-    return { avgProposalValue: null, avgDurationDays: null };
+  // Public detail page — proposal and interested counts (no auth required)
+  const detailResponse = await axios.get<string>(jobUrl, { headers: HEADERS, timeout: 10000 });
+  const $detail = cheerio.load(detailResponse.data);
+  const proposalCount = parseTableCount($detail, 'Propostas');
+  const interestedCount = parseTableCount($detail, 'Interessados');
+
+  // Bid page — avg proposal value and duration (auth required)
+  let avgProposalValue: number | null = null;
+  let avgDurationDays: number | null = null;
+
+  if (config.freelas99AuthId && config.freelas99AuthToken) {
+    try {
+      const bidUrl = jobUrl.replace('/project/', '/project/bid/');
+      const cookieHeader = `kmlicin=${config.freelas99AuthId}; kmlicn=${config.freelas99AuthToken}`;
+      const bidResponse = await axios.get<string>(bidUrl, {
+        headers: { ...HEADERS, Cookie: cookieHeader },
+        timeout: 10000,
+        maxRedirects: 0,
+        validateStatus: (status) => status === 200,
+      });
+      const $bid = cheerio.load(bidResponse.data);
+      const text = $bid('div.generic.information').text();
+      avgProposalValue = parseAvgProposalValue(text);
+      avgDurationDays = parseAvgDurationDays(text);
+    } catch {
+      // bid page fetch failed — avg fields stay null
+    }
   }
 
-  const bidUrl = jobUrl.replace('/project/', '/project/bid/');
-  const cookieHeader = `kmlicin=${config.freelas99AuthId}; kmlicn=${config.freelas99AuthToken}`;
-
-  const response = await axios.get<string>(bidUrl, {
-    headers: { ...HEADERS, Cookie: cookieHeader },
-    timeout: 10000,
-    maxRedirects: 0,
-    validateStatus: (status) => status === 200,
-  });
-
-  const $ = cheerio.load(response.data);
-  const text = $('div.generic.information').text();
-
-  return {
-    avgProposalValue: parseAvgProposalValue(text),
-    avgDurationDays: parseAvgDurationDays(text),
-  };
-}
-
-function parseAvgProposalValue(text: string): number | null {
-  const match = text.match(/Valor\s+m[eé]dio\s+das\s+propostas:\s*R\$[\s ]*([\d.,]+)/i);
-  if (!match?.[1]) return null;
-  return Number(match[1].replace(/\./g, '').replace(',', '.'));
-}
-
-function parseAvgDurationDays(text: string): number | null {
-  const match = text.match(/Dura[cç][aã]o\s+m[eé]dia\s+estimada:\s*(\d+)/i);
-  return match?.[1] ? Number(match[1]) : null;
+  return { proposalCount, interestedCount, avgProposalValue, avgDurationDays };
 }

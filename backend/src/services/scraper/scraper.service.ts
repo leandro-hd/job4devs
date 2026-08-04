@@ -52,7 +52,7 @@ export async function scrapeAndStore(): Promise<ScrapeSummary> {
     for (const inserted of insertedJobs) {
       try {
         const detail = await freelas99Scraper.fetchJobDetail(inserted.url);
-        await jobsRepository.updateJobDetail(inserted.id, detail.avgProposalValue, detail.avgDurationDays);
+        await jobsRepository.updateJobDetail(inserted.id, detail);
       } catch (err) {
         logger.warn({ err, jobId: inserted.id }, 'Failed to fetch job detail — skipping');
       }

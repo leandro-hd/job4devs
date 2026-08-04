@@ -14,8 +14,6 @@ export interface NewJob {
   location: string | null;
   rawTags: string[];
   publishedAt: Date | null;
-  proposalCount: number | null;
-  interestedCount: number | null;
 }
 
 export interface Job {
@@ -102,10 +100,9 @@ export async function insertMany(jobs: NewJob[]): Promise<InsertedJob[]> {
         `INSERT INTO jobs (
            source_id, external_id, title, url, description,
            budget_min, budget_max, budget_type,
-           client_rating, client_reviews, location, raw_tags, published_at,
-           proposal_count, interested_count
+           client_rating, client_reviews, location, raw_tags, published_at
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          ON CONFLICT (source_id, external_id) DO NOTHING
          RETURNING id, url`,
         [
@@ -122,8 +119,6 @@ export async function insertMany(jobs: NewJob[]): Promise<InsertedJob[]> {
           job.location,
           job.rawTags,
           job.publishedAt,
-          job.proposalCount,
-          job.interestedCount,
         ]
       );
       if (result.rows[0]) {
@@ -143,12 +138,19 @@ export async function insertMany(jobs: NewJob[]): Promise<InsertedJob[]> {
 
 export async function updateJobDetail(
   id: number,
-  avgProposalValue: number | null,
-  avgDurationDays: number | null
+  detail: {
+    proposalCount: number | null;
+    interestedCount: number | null;
+    avgProposalValue: number | null;
+    avgDurationDays: number | null;
+  }
 ): Promise<void> {
   await pool.query(
-    `UPDATE jobs SET avg_proposal_value = $2, avg_duration_days = $3 WHERE id = $1`,
-    [id, avgProposalValue, avgDurationDays]
+    `UPDATE jobs
+     SET proposal_count = $2, interested_count = $3,
+         avg_proposal_value = $4, avg_duration_days = $5
+     WHERE id = $1`,
+    [id, detail.proposalCount, detail.interestedCount, detail.avgProposalValue, detail.avgDurationDays]
   );
 }
 
