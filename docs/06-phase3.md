@@ -109,11 +109,9 @@ UPDATE users SET email_verified = true WHERE active = true;
 - `notification.service.ts`: `sendAuthExpiredAlert` com instruções de renovação dos cookies
 
 *Frontend:*
-- `Dashboard/index.tsx`: banner amarelo quando `status.freelas99AuthExpired === true`
 - `status.service.ts`: campo `freelas99AuthExpired: boolean` na interface `SystemStatus`
-
-**Ação pendente no Railway:**
-- Adicionar `ADMIN_EMAIL` às env vars
+- Banner na UI removido pós-deploy — usuário final não pode atualizar as env vars do Railway,
+  então a notificação é exclusivamente via e-mail ao admin
 
 ---
 
@@ -184,16 +182,20 @@ do `min_budget` foi substituída pelo comportamento real.
 ## Checklist de deploy da Fase 3
 
 ### Implementado no código
-- [x] Rate limiting ativo nas rotas de auth
+- [x] Rate limiting ativo nas rotas de auth; frontend exibe mensagem correta no 429
 - [x] Cadastro novo exige verificação de e-mail antes de receber alertas
 - [x] Refresh token — sessão persiste após F5
-- [x] Dashboard exibe banner quando cookies do 99freelas expiram
-- [x] Admin recebe e-mail de alerta único quando cookies expiram
-- [x] Suite de testes passando no CI
+- [x] Admin recebe e-mail de alerta único quando cookies do 99freelas expiram
+- [x] Suite de testes criada (vitest + supertest)
 - [x] Filtros de budget e rating funcionando no pipeline do worker
 
-### Ações manuais antes do primeiro deploy
-- [ ] Rodar no banco de produção: `UPDATE users SET email_verified = true WHERE active = true;`
+### Ações manuais (pós-deploy)
+- [x] `ADMIN_EMAIL` configurado no Railway
+- [x] Usuários existentes marcados como verificados via resend (conta pré-Fase 3)
 - [ ] Atualizar `JWT_EXPIRES_IN=15m` no Railway (era `7d`)
-- [ ] Adicionar `ADMIN_EMAIL` às env vars do Railway
-- [ ] Testar rate limiting manualmente com curl após deploy
+
+### Observações de deploy
+- CI do GitHub Actions (job `test`) configurado mas com problema de infraestrutura do GitHub
+  (runner não adquirido). Railway auto-deploy via push direto compensa enquanto não resolve.
+- O `deploy` job no CI depende de `[backend, frontend, test]` — quando o runner voltar a funcionar,
+  o deploy via CI retoma automaticamente.
