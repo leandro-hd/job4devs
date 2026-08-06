@@ -17,6 +17,8 @@ function SettingsForm({ initial, saving, error, save }: SettingsFormProps) {
   const [keywords, setKeywords] = useState(initial.keywords ?? '');
   const [excludeKeywords, setExcludeKeywords] = useState(initial.exclude_keywords ?? '');
   const [minBudget, setMinBudget] = useState(initial.min_budget ?? '');
+  const [maxBudget, setMaxBudget] = useState(initial.max_budget ?? '');
+  const [minClientRating, setMinClientRating] = useState(initial.min_client_rating ?? '');
   const [notificationEmail, setNotificationEmail] = useState(initial.notification_email ?? '');
   const [saved, setSaved] = useState(false);
 
@@ -27,6 +29,8 @@ function SettingsForm({ initial, saving, error, save }: SettingsFormProps) {
       keywords,
       exclude_keywords: excludeKeywords,
       min_budget: minBudget,
+      max_budget: maxBudget,
+      min_client_rating: minClientRating,
       notification_email: notificationEmail,
     });
     setSaved(ok);
@@ -50,10 +54,32 @@ function SettingsForm({ initial, saving, error, save }: SettingsFormProps) {
         </p>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="min_budget">Orçamento mínimo</Label>
-        <Input id="min_budget" type="number" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} />
+        <Label htmlFor="min_budget">Orçamento mínimo (R$)</Label>
+        <Input id="min_budget" type="number" min="0" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} />
         <p className="text-xs text-muted-foreground">
-          Ainda não é usado para filtrar vagas — o 99freelas não expõe orçamento na listagem.
+          Vagas com orçamento abaixo deste valor serão ignoradas. Vagas sem orçamento informado são sempre incluídas.
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="max_budget">Orçamento máximo (R$)</Label>
+        <Input id="max_budget" type="number" min="0" value={maxBudget} onChange={(e) => setMaxBudget(e.target.value)} />
+        <p className="text-xs text-muted-foreground">
+          Vagas com orçamento acima deste valor serão ignoradas. Vagas sem orçamento informado são sempre incluídas.
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="min_client_rating">Avaliação mínima do cliente (0–5)</Label>
+        <Input
+          id="min_client_rating"
+          type="number"
+          min="0"
+          max="5"
+          step="0.1"
+          value={minClientRating}
+          onChange={(e) => setMinClientRating(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Apenas vagas de clientes com esta avaliação ou superior serão notificadas. Clientes sem avaliação são sempre incluídos.
         </p>
       </div>
       <div className="flex flex-col gap-2">

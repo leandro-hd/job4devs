@@ -55,13 +55,19 @@ export async function runScrapeJob(): Promise<void> {
         const settings = await settingsRepository.getByUserId(user.id);
         const keywords = filterService.parseKeywords(settings.get('keywords'));
         const excludeKeywords = filterService.parseKeywords(settings.get('exclude_keywords'));
+        const minBudget = settings.get('min_budget') ? Number(settings.get('min_budget')) : null;
+        const maxBudget = settings.get('max_budget') ? Number(settings.get('max_budget')) : null;
+        const minClientRating = settings.get('min_client_rating') ? Number(settings.get('min_client_rating')) : null;
 
         if (keywords.length > 0) {
           const unseenJobs = await jobsRepository.findUnnotifiedForUser(user.id);
           const matched = unseenJobs.filter(
             (job) =>
               filterService.matchesKeywords(job, keywords) &&
-              !filterService.matchesKeywords(job, excludeKeywords)
+              !filterService.matchesKeywords(job, excludeKeywords) &&
+              filterService.passesMinBudget(job, minBudget) &&
+              filterService.passesMaxBudget(job, maxBudget) &&
+              filterService.passesMinClientRating(job, minClientRating)
           );
 
           if (matched.length > 0) {

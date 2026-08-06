@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseKeywords, matchesKeywords } from '../services/filter.service';
+import { parseKeywords, matchesKeywords, passesMinBudget, passesMaxBudget, passesMinClientRating } from '../services/filter.service';
 import type { Job } from '../db/repositories/jobs.repository';
 
 function makeJob(overrides: Partial<Job> = {}): Job {
@@ -72,5 +72,59 @@ describe('matchesKeywords', () => {
 
   it('matches partial keyword within a word', () => {
     expect(matchesKeywords(makeJob({ title: 'JavaScript Developer' }), ['java'])).toBe(true);
+  });
+});
+
+describe('passesMinBudget', () => {
+  it('passes when no min_budget is set', () => {
+    expect(passesMinBudget(makeJob({ budgetMin: 100 }), null)).toBe(true);
+  });
+
+  it('passes when job has no budget data', () => {
+    expect(passesMinBudget(makeJob({ budgetMin: null }), 500)).toBe(true);
+  });
+
+  it('passes when budget meets the minimum', () => {
+    expect(passesMinBudget(makeJob({ budgetMin: 500 }), 500)).toBe(true);
+  });
+
+  it('fails when budget is below the minimum', () => {
+    expect(passesMinBudget(makeJob({ budgetMin: 200 }), 500)).toBe(false);
+  });
+});
+
+describe('passesMaxBudget', () => {
+  it('passes when no max_budget is set', () => {
+    expect(passesMaxBudget(makeJob({ budgetMax: 5000 }), null)).toBe(true);
+  });
+
+  it('passes when job has no budget data', () => {
+    expect(passesMaxBudget(makeJob({ budgetMax: null }), 1000)).toBe(true);
+  });
+
+  it('passes when budget is within the maximum', () => {
+    expect(passesMaxBudget(makeJob({ budgetMax: 1000 }), 1000)).toBe(true);
+  });
+
+  it('fails when budget exceeds the maximum', () => {
+    expect(passesMaxBudget(makeJob({ budgetMax: 2000 }), 1000)).toBe(false);
+  });
+});
+
+describe('passesMinClientRating', () => {
+  it('passes when no min rating is set', () => {
+    expect(passesMinClientRating(makeJob({ clientRating: 3 }), null)).toBe(true);
+  });
+
+  it('passes when client has no rating', () => {
+    expect(passesMinClientRating(makeJob({ clientRating: null }), 4)).toBe(true);
+  });
+
+  it('passes when rating meets the minimum', () => {
+    expect(passesMinClientRating(makeJob({ clientRating: 4.5 }), 4)).toBe(true);
+  });
+
+  it('fails when rating is below the minimum', () => {
+    expect(passesMinClientRating(makeJob({ clientRating: 3.5 }), 4)).toBe(false);
   });
 });
