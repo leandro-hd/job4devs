@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,8 +27,13 @@ export function Login() {
     try {
       await login(email, password);
       navigate('/');
-    } catch {
-      setError('E-mail ou senha inválidos.');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 429) {
+        const msg = (err.response.data as { error?: string }).error;
+        setError(msg ?? 'Muitas tentativas. Tente novamente mais tarde.');
+      } else {
+        setError('E-mail ou senha inválidos.');
+      }
     } finally {
       setLoading(false);
     }
