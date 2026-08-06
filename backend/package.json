@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch server.ts",
-    "build": "tsc && cp -r src/db/migrations dist/src/db/migrations",
+    "build": "rm -rf dist && tsc && cp -r src/db/migrations dist/src/db/migrations",
     "start": "node dist/server.js",
     "migrate": "tsx src/db/migrate.ts",
     "type-check": "tsc --noEmit",
