@@ -2,6 +2,13 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { config } from '../../../config';
 
+export class Freelas99AuthExpiredError extends Error {
+  constructor() {
+    super('99freelas auth cookies expired — update FREELAS99_AUTH_ID and FREELAS99_AUTH_TOKEN in Railway');
+    this.name = 'Freelas99AuthExpiredError';
+  }
+}
+
 const BASE_URL = 'https://www.99freelas.com.br';
 
 const HEADERS = {
@@ -139,8 +146,11 @@ export async function fetchJobDetail(jobUrl: string): Promise<JobDetail> {
       const text = $bid('div.generic.information').text();
       avgProposalValue = parseAvgProposalValue(text);
       avgDurationDays = parseAvgDurationDays(text);
-    } catch {
-      // bid page fetch failed — avg fields stay null
+    } catch (err) {
+      if (axios.isAxiosError(err) && (err.response?.status === 301 || err.response?.status === 302)) {
+        throw new Freelas99AuthExpiredError();
+      }
+      // other errors (network, timeout) — avg fields stay null, continue
     }
   }
 

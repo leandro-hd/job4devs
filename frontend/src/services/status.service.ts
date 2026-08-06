@@ -14,6 +14,7 @@ export interface SystemStatus {
   lastCycle: AlertLog | null;
   totalJobs: number;
   totalNotificationsSent: number;
+  freelas99AuthExpired: boolean;
 }
 
 export async function getStatus(): Promise<SystemStatus> {

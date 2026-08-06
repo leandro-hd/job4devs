@@ -86,6 +86,52 @@ function buildEmailTemplate(jobs: AlertJob[], unsubscribeUrl: string): string {
 </html>`;
 }
 
+export async function sendAuthExpiredAlert(adminEmail: string): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: config.emailTransactionalFrom,
+    to: adminEmail,
+    subject: '⚠️ Credenciais do 99freelas expiraram — job4devs',
+    html: `<!doctype html>
+<html lang="pt-BR">
+  <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:24px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+            <tr>
+              <td style="background-color:#7c3aed;background-image:linear-gradient(135deg,#7c3aed,#06b6d4);padding:24px 32px;">
+                <span style="color:#ffffff;font-size:22px;font-weight:bold;">🔔 job4devs</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <p style="margin:0 0 16px;font-size:16px;color:#111827;font-weight:bold;">Os cookies de autenticação do 99freelas expiraram.</p>
+                <p style="margin:0 0 16px;font-size:14px;color:#6b7280;">Os campos <code>avg_proposal_value</code> e <code>avg_duration_days</code> ficam nulos até a atualização.</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#111827;font-weight:bold;">Como corrigir:</p>
+                <ol style="margin:0 0 24px;padding-left:20px;font-size:14px;color:#6b7280;line-height:1.8;">
+                  <li>Acesse <a href="https://www.99freelas.com.br" style="color:#7c3aed;">99freelas.com.br</a> e faça login</li>
+                  <li>Abra DevTools → Application → Cookies → www.99freelas.com.br</li>
+                  <li>Copie os valores de <code>kmlicin</code> e <code>kmlicn</code></li>
+                  <li>Atualize as variáveis <code>FREELAS99_AUTH_ID</code> e <code>FREELAS99_AUTH_TOKEN</code> no Railway</li>
+                </ol>
+                <p style="margin:0;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:16px;">Este alerta é enviado apenas uma vez por sessão do servidor.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  logger.info({ recipient: adminEmail }, 'Auth expired alert sent');
+}
+
 export async function sendVerificationEmail(recipientEmail: string, verificationUrl: string): Promise<void> {
   const { error } = await resend.emails.send({
     from: config.emailTransactionalFrom,

@@ -16,6 +16,7 @@ interface Config {
   defaultCronIntervalMinutes: number;
   freelas99AuthId: string | null;
   freelas99AuthToken: string | null;
+  adminEmail: string | null;
 }
 
 function required(name: string): string {
@@ -40,4 +41,5 @@ export const config: Config = {
   defaultCronIntervalMinutes: Number(process.env.DEFAULT_CRON_INTERVAL_MINUTES ?? 5),
   freelas99AuthId: process.env.FREELAS99_AUTH_ID ?? null,
   freelas99AuthToken: process.env.FREELAS99_AUTH_TOKEN ?? null,
+  adminEmail: process.env.ADMIN_EMAIL ?? null,
 };

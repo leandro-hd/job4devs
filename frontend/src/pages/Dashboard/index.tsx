@@ -12,6 +12,11 @@ export function Dashboard() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
+      {status?.freelas99AuthExpired && (
+        <div className="rounded-md border border-yellow-400 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-600 dark:bg-yellow-950 dark:text-yellow-200">
+          <strong>Credenciais do 99freelas expiraram.</strong> Os campos de média de propostas ficam nulos até a atualização. Acesse Railway → Backend → Variables e atualize <code>FREELAS99_AUTH_ID</code> e <code>FREELAS99_AUTH_TOKEN</code>.
+        </div>
+      )}
       <StatusBanner lastCycle={status?.lastCycle ?? null} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card className="overflow-hidden border-l-4 border-l-violet-500">

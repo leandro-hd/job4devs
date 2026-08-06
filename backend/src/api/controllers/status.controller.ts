@@ -2,6 +2,7 @@ import { Response } from 'express';
 import * as logsRepository from '../../db/repositories/logs.repository';
 import * as jobsRepository from '../../db/repositories/jobs.repository';
 import * as notificationsRepository from '../../db/repositories/notifications.repository';
+import * as scraperState from '../../services/scraper/scraper-state';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
 export async function getStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -16,5 +17,10 @@ export async function getStatus(req: AuthenticatedRequest, res: Response): Promi
     notificationsRepository.countSentForUser(req.userId),
   ]);
 
-  res.json({ lastCycle, totalJobs, totalNotificationsSent });
+  res.json({
+    lastCycle,
+    totalJobs,
+    totalNotificationsSent,
+    freelas99AuthExpired: scraperState.isFreelas99AuthExpired(),
+  });
 }

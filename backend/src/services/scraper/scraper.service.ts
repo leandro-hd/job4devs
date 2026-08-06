@@ -1,6 +1,9 @@
 import * as sourcesRepository from '../../db/repositories/sources.repository';
 import * as jobsRepository from '../../db/repositories/jobs.repository';
 import * as freelas99Scraper from './sources/freelas99.scraper';
+import * as scraperState from './scraper-state';
+import * as notificationService from '../notification.service';
+import { config } from '../../config';
 import { logger } from '../../lib/logger';
 
 const SOURCE_NAME = '99freelas';
@@ -54,7 +57,20 @@ export async function scrapeAndStore(): Promise<ScrapeSummary> {
         const detail = await freelas99Scraper.fetchJobDetail(inserted.url);
         await jobsRepository.updateJobDetail(inserted.id, detail);
       } catch (err) {
-        logger.warn({ err, jobId: inserted.id }, 'Failed to fetch job detail — skipping');
+        if (err instanceof freelas99Scraper.Freelas99AuthExpiredError) {
+          if (!scraperState.isFreelas99AuthExpired()) {
+            scraperState.setFreelas99AuthExpired();
+            logger.warn('99freelas auth cookies expired — avg proposal fields will be null until env vars are updated');
+            if (config.adminEmail && !scraperState.isFreelas99AuthExpiredAlertSent()) {
+              scraperState.markFreelas99AuthExpiredAlertSent();
+              notificationService.sendAuthExpiredAlert(config.adminEmail).catch((alertErr) => {
+                logger.error({ err: alertErr }, 'Failed to send auth expired alert email');
+              });
+            }
+          }
+        } else {
+          logger.warn({ err, jobId: inserted.id }, 'Failed to fetch job detail — skipping');
+        }
       }
       await delay(MIN_DELAY_MS + Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS));
     }
