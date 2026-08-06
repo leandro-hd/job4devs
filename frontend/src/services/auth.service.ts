@@ -52,3 +52,12 @@ export async function verifyEmail(token: string): Promise<void> {
 export async function resendVerification(): Promise<void> {
   await api.post('/api/auth/resend-verification');
 }
+
+export async function refresh(): Promise<{ token: string; user: AuthUser }> {
+  const { data } = await api.post<{ token: string; user: AuthUser }>('/api/auth/refresh');
+  return data;
+}
+
+export async function logout(): Promise<void> {
+  await api.post('/api/auth/logout');
+}

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, me, reactivate, forgotPassword, resetPassword, unsubscribe, verifyEmail, resendVerification } from '../controllers/auth.controller';
+import { register, login, me, reactivate, forgotPassword, resetPassword, unsubscribe, verifyEmail, resendVerification, refresh, logout } from '../controllers/auth.controller';
 import { validateRegister, validateLogin, validateForgotPassword, validateResetPassword, validateVerifyEmail } from '../middlewares/validateRequest';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
@@ -54,6 +54,8 @@ router.post('/forgot-password', forgotPasswordLimiter, validateForgotPassword, f
 router.post('/reset-password', resetPasswordLimiter, validateResetPassword, resetPassword);
 router.post('/verify-email', validateVerifyEmail, verifyEmail);
 router.post('/resend-verification', resendVerificationLimiter, authMiddleware, resendVerification);
+router.post('/refresh', refresh);
+router.post('/logout', logout);
 router.get('/unsubscribe', unsubscribe);
 
 export default router;

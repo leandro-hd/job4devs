@@ -1,8 +1,21 @@
-import { Request, Response } from 'express';
+import { Request, Response, CookieOptions } from 'express';
 import * as authService from '../../services/auth.service';
 import * as usersRepository from '../../db/repositories/users.repository';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { logger } from '../../lib/logger';
+import { config } from '../../config';
+
+const REFRESH_COOKIE = 'refresh_token';
+
+function refreshCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: config.nodeEnv === 'production',
+    sameSite: 'strict',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/api/auth',
+  };
+}
 
 export async function register(req: Request, res: Response): Promise<void> {
   const { email, password, name } = req.body as { email: string; password: string; name: string };
@@ -28,8 +41,38 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  const refreshToken = await authService.createRefreshToken(result.user.id);
+  res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions());
+
   logger.info({ userId: result.user.id, email }, 'User logged in');
   res.json(result);
+}
+
+export async function refresh(req: Request, res: Response): Promise<void> {
+  const rawToken = (req.cookies as Record<string, string>)[REFRESH_COOKIE];
+  if (!rawToken) {
+    res.status(401).json({ error: 'No refresh token' });
+    return;
+  }
+
+  const result = await authService.refreshAccessToken(rawToken);
+  if (!result) {
+    res.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
+    res.status(401).json({ error: 'Invalid or expired refresh token' });
+    return;
+  }
+
+  res.cookie(REFRESH_COOKIE, result.newRefreshToken, refreshCookieOptions());
+  res.json({ token: result.accessToken, user: result.user });
+}
+
+export async function logout(req: Request, res: Response): Promise<void> {
+  const rawToken = (req.cookies as Record<string, string>)[REFRESH_COOKIE];
+  if (rawToken) {
+    await authService.revokeRefreshToken(rawToken);
+  }
+  res.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
+  res.json({ message: 'Logged out' });
 }
 
 export async function me(req: AuthenticatedRequest, res: Response): Promise<void> {

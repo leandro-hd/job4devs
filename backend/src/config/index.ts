@@ -31,7 +31,7 @@ export const config: Config = {
   port: Number(process.env.PORT ?? 3000),
   databaseUrl: required('DATABASE_URL'),
   jwtSecret: required('JWT_SECRET'),
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '15m',
   resendApiKey: required('RESEND_API_KEY'),
   emailFrom: process.env.EMAIL_FROM ?? 'job4devs <alerts@job4devs.dev>',
   emailTransactionalFrom: process.env.EMAIL_TRANSACTIONAL_FROM ?? 'job4devs <noreply@job4devs.dev>',

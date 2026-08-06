@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 import { config } from '../config';
 import * as usersRepository from '../db/repositories/users.repository';
+import * as refreshTokensRepository from '../db/repositories/refresh_tokens.repository';
 import * as notificationService from './notification.service';
 
 const SALT_ROUNDS = 10;
@@ -129,4 +130,32 @@ export async function resetPassword(token: string, newPassword: string): Promise
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await usersRepository.updatePassword(user.id, passwordHash);
   return true;
+}
+
+export async function createRefreshToken(userId: number): Promise<string> {
+  const rawToken = randomBytes(64).toString('hex');
+  await refreshTokensRepository.create(userId, rawToken);
+  return rawToken;
+}
+
+export async function refreshAccessToken(rawToken: string): Promise<{
+  accessToken: string;
+  newRefreshToken: string;
+  user: PublicUser;
+} | null> {
+  const record = await refreshTokensRepository.findValidByToken(rawToken);
+  if (!record) return null;
+
+  const user = await usersRepository.findById(record.userId);
+  if (!user || !user.active) return null;
+
+  await refreshTokensRepository.deleteByToken(rawToken);
+  const newRefreshToken = await createRefreshToken(record.userId);
+  const accessToken = signToken({ userId: record.userId });
+
+  return { accessToken, newRefreshToken, user: toPublicUser(user) };
+}
+
+export async function revokeRefreshToken(rawToken: string): Promise<void> {
+  await refreshTokensRepository.deleteByToken(rawToken);
 }
