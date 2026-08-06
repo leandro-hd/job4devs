@@ -45,19 +45,19 @@ function parseClientReviews(text: string): number {
   return match?.[1] ? Number(match[1]) : 0;
 }
 
-function parseTableCount($: cheerio.CheerioAPI, label: string): number | null {
+export function parseTableCount($: cheerio.CheerioAPI, label: string): number | null {
   const th = $('th').filter((_, el) => $(el).text().trim().startsWith(label));
   const value = th.next('td').text().trim();
   return value ? Number(value) : null;
 }
 
-function parseAvgProposalValue(text: string): number | null {
+export function parseAvgProposalValue(text: string): number | null {
   const match = text.match(/Valor\s+m[eé]dio\s+das\s+propostas:\s*R\$[\s ]*([\d.,]+)/i);
   if (!match?.[1]) return null;
   return Number(match[1].replace(/\./g, '').replace(',', '.'));
 }
 
-function parseAvgDurationDays(text: string): number | null {
+export function parseAvgDurationDays(text: string): number | null {
   const match = text.match(/Dura[cç][aã]o\s+m[eé]dia\s+estimada:\s*(\d+)/i);
   return match?.[1] ? Number(match[1]) : null;
 }
