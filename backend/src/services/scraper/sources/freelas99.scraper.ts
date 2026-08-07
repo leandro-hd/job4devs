@@ -133,25 +133,35 @@ export async function fetchJobDetail(jobUrl: string): Promise<JobDetail> {
   let avgDurationDays: number | null = null;
 
   if (config.freelas99AuthId && config.freelas99AuthToken) {
-    try {
-      const bidUrl = jobUrl.replace('/project/', '/project/bid/');
-      const cookieHeader = `kmlicin=${config.freelas99AuthId}; kmlicn=${config.freelas99AuthToken}`;
-      const bidResponse = await axios.get<string>(bidUrl, {
-        headers: { ...HEADERS, Cookie: cookieHeader },
-        timeout: 10000,
-        maxRedirects: 0,
-        validateStatus: (status) => status === 200,
-      });
-      const $bid = cheerio.load(bidResponse.data);
-      const text = $bid('div.generic.information').text();
-      avgProposalValue = parseAvgProposalValue(text);
-      avgDurationDays = parseAvgDurationDays(text);
-    } catch (err) {
-      if (axios.isAxiosError(err) && (err.response?.status === 301 || err.response?.status === 302)) {
-        throw new Freelas99AuthExpiredError();
+    const bidUrl = jobUrl.replace('/project/', '/project/bid/');
+    const cookieHeader = `kmlicin=${config.freelas99AuthId}; kmlicn=${config.freelas99AuthToken}`;
+    let redirectCount = 0;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const bidResponse = await axios.get<string>(bidUrl, {
+          headers: { ...HEADERS, Cookie: cookieHeader },
+          timeout: 10000,
+          maxRedirects: 0,
+          validateStatus: (status) => status === 200,
+        });
+        const $bid = cheerio.load(bidResponse.data);
+        const text = $bid('div.generic.information').text();
+        avgProposalValue = parseAvgProposalValue(text);
+        avgDurationDays = parseAvgDurationDays(text);
+        break;
+      } catch (err) {
+        if (axios.isAxiosError(err) && (err.response?.status === 301 || err.response?.status === 302)) {
+          redirectCount++;
+          // wait 2s before retry to rule out transient redirects
+          if (attempt === 0) await new Promise((r) => setTimeout(r, 2000));
+        } else {
+          break; // network/timeout — avg fields stay null, continue
+        }
       }
-      // other errors (network, timeout) — avg fields stay null, continue
     }
+
+    if (redirectCount === 2) throw new Freelas99AuthExpiredError();
   }
 
   return { proposalCount, interestedCount, avgProposalValue, avgDurationDays };
