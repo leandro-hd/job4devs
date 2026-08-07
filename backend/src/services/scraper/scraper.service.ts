@@ -10,6 +10,9 @@ const SOURCE_NAME = '99freelas';
 const MAX_PAGES = 10;
 const MIN_DELAY_MS = 1500;
 const MAX_DELAY_MS = 2500;
+// Require multiple jobs to fail before flagging auth as expired — guards against
+// transient redirects from 99freelas rate limiting or momentary instability.
+const AUTH_EXPIRED_THRESHOLD = 3;
 
 export interface ScrapeSummary {
   jobsFound: number;
@@ -31,6 +34,7 @@ export async function scrapeAndStore(): Promise<ScrapeSummary> {
   let jobsFound = 0;
   let jobsNew = 0;
   let partial = false;
+  let authExpiredCount = 0;
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     const jobs = await freelas99Scraper.fetchPage(page);
@@ -58,9 +62,13 @@ export async function scrapeAndStore(): Promise<ScrapeSummary> {
         await jobsRepository.updateJobDetail(inserted.id, detail);
       } catch (err) {
         if (err instanceof freelas99Scraper.Freelas99AuthExpiredError) {
-          if (!scraperState.isFreelas99AuthExpired()) {
+          authExpiredCount++;
+          if (authExpiredCount >= AUTH_EXPIRED_THRESHOLD && !scraperState.isFreelas99AuthExpired()) {
             scraperState.setFreelas99AuthExpired();
-            logger.warn('99freelas auth cookies expired — avg proposal fields will be null until env vars are updated');
+            logger.warn(
+              { authExpiredCount },
+              '99freelas auth cookies expired — avg proposal fields will be null until env vars are updated'
+            );
             if (config.adminEmail && !scraperState.isFreelas99AuthExpiredAlertSent()) {
               scraperState.markFreelas99AuthExpiredAlertSent();
               notificationService.sendAuthExpiredAlert(config.adminEmail).catch((alertErr) => {
