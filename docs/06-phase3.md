@@ -191,8 +191,14 @@ do `min_budget` foi substituída pelo comportamento real.
 
 ### Ações manuais (pós-deploy)
 - [x] `ADMIN_EMAIL` configurado no Railway
+- [x] `JWT_EXPIRES_IN=15m` atualizado no Railway
 - [x] Usuários existentes marcados como verificados via resend (conta pré-Fase 3)
-- [ ] Atualizar `JWT_EXPIRES_IN=15m` no Railway (era `7d`)
+
+### Correções pós-deploy
+- **Login.tsx**: catch block diferencia 429 de outros erros e exibe a mensagem da API
+  em vez de "E-mail ou senha inválidos" quando o rate limit é atingido
+- **freelas99.scraper.ts**: bid page retenta uma vez (com 2s de intervalo) antes de lançar
+  `Freelas99AuthExpiredError` — evita falso positivo por redirect transiente do 99freelas
 
 ### Observações de deploy
 - CI do GitHub Actions (job `test`) configurado mas com problema de infraestrutura do GitHub
